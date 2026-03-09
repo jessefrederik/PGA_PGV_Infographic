@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Van sensor tot PGV — Groningse aardbevingen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --color-acc: #B54E35;
+            --color-vel: #2D5F7C;
+            --color-bg: #FAFAF8;
+            --color-surface: #F0EDE8;
+            --color-text: #2D2D2D;
+            --color-muted: #5A5A5A;
+            --color-border: #E3E0DB;
+            --font: 'Libre Franklin', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-display: 'PT Serif', 'Source Serif Pro', Georgia, serif;
+            --max-width: 1080px;
+        }
+
+        body {
+            font-family: var(--font);
+            color: var(--color-text);
+            background: var(--color-bg);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem;
+        }
+
+        /* ── Header ─────────────────────────────────────────────────────── */
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        header h1 {
+            font-family: var(--font-display);
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            font-weight: 700;
+            line-height: 1.25;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.01em;
+        }
+        header .subtitle {
+            font-size: 1.05rem;
+            color: var(--color-muted);
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        /* ── Event pill ─────────────────────────────────────────────────── */
+        .event-pill {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem 1.5rem;
+            justify-content: center;
+            background: var(--color-surface);
+            border: none;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 3rem;
+            font-size: 0.88rem;
+            color: var(--color-muted);
+        }
+        .event-pill strong {
+            color: var(--color-text);
+            font-weight: 600;
+        }
+        .event-pill .mag {
+            background: var(--color-acc);
+            color: #fff;
+            padding: 0.1rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        /* ── Step blocks ────────────────────────────────────────────────── */
+        .step {
+            margin-bottom: 3.5rem;
+        }
+        .step-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.5rem;
+        }
+        .step-label .num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 0.72rem;
+        }
+        .step-label.acc  .num { background: var(--color-acc); }
+        .step-label.acc       { color: var(--color-acc); }
+        .step-label.vel  .num { background: var(--color-vel); }
+        .step-label.vel       { color: var(--color-vel); }
+
+        .step h2 {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            line-height: 1.3;
+        }
+
+        .step .prose {
+            font-size: 0.95rem;
+            color: var(--color-text);
+            margin-bottom: 1.25rem;
+            line-height: 1.75;
+        }
+        .step .prose strong {
+            color: var(--color-text);
+        }
+
+        /* ── Chart row (3 side-by-side) ────────────────────────────────── */
+        .chart-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+        @media (max-width: 700px) {
+            .chart-row { grid-template-columns: 1fr; }
+        }
+
+        /* ── Chart card ─────────────────────────────────────────────────── */
+        .chart-card {
+            background: #fff;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 0.75rem 0.75rem;
+            position: relative;
+        }
+        .chart-card.acc  { border-top: 3px solid var(--color-acc); }
+        .chart-card.vel  { border-top: 3px solid var(--color-vel); }
+
+        .chart-card .card-title {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--color-muted);
+            margin-bottom: 0.4rem;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+        }
+        .chart-container svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        /* Tooltip */
+        .chart-tooltip {
+            position: absolute;
+            pointer-events: none;
+            background: rgba(26, 26, 26, 0.92);
+            color: #fff;
+            padding: 0.35rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.12s;
+            z-index: 10;
+        }
+
+        /* ── Transition arrow ───────────────────────────────────────────── */
+        .arrow-down {
+            display: flex;
+            justify-content: center;
+            padding: 0.5rem 0 1.5rem;
+            color: #B8B4AE;
+        }
+        .arrow-down svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        /* ── Footer ─────────────────────────────────────────────────────── */
+        footer {
+            text-align: center;
+            padding: 1.5rem 0 0;
+            font-size: 0.78rem;
+            color: var(--color-muted);
+            border-top: 1px solid var(--color-border);
+        }
+        footer a {
+            color: var(--color-vel);
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ── Loading ────────────────────────────────────────────────────── */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--color-muted);
+        }
+        .spinner {
+            width: 32px; height: 32px;
+            border: 3px solid var(--color-border);
+            border-top-color: var(--color-vel);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin: 0 auto 0.75rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <header>
+        <h1>Van sensor tot piekgrondsnelheid</h1>
+        <p class="subtitle">
+            Hoe komen seismologen van een rauw signaal uit de grond
+            tot het getal dat vertelt hoeveel schade een aardbeving kan veroorzaken?
+        </p>
+    </header>
+
+    <div class="event-pill" id="event-pill">
+        <div class="loading"><div class="spinner"></div>Data laden...</div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!--  STEP 1 — Acceleration (3 stations)                              -->
+    <!-- ================================================================ -->
+    <div class="step" id="step-1">
+        <div class="step-label acc"><span class="num">1</span> Versnelling meten</div>
+        <h2>Sensoren in de grond vangen de schok op</h2>
+        <p class="prose">
+            Verspreid over Groningen liggen honderden <strong>accelerometers</strong> in
+            de grond — kastjes ter grootte van een schoenendoos. Binnenin hangt een
+            gewichtje aan een veer. Als de grond schudt, beweegt het kastje mee, maar
+            het gewichtje blijft even achter. Dat verschil wordt gemeten als een
+            elektrisch signaal.
+        </p>
+        <p class="prose">
+            Het KNMI vertaalt dit signaal naar <strong>grondversnelling</strong>:
+            hoeveel de snelheid van de grond <em>per seconde verandert</em>, uitgedrukt
+            in cm/s². Denk aan een auto die optrekt — hoe harder je het gaspedaal
+            intrapt, hoe groter de versnelling en hoe sterker je in je stoel wordt
+            gedrukt.
+        </p>
+        <p class="prose">
+            Hieronder zie je drie stations op verschillende afstanden van het
+            epicentrum. Let op: dichtbij (links) slaat de naald flink uit. Een
+            paar kilometer verderop (rechts) is hetzelfde bevingsmoment al veel
+            zwakker. De schokgolf verliest energie onderweg.
+        </p>
+
+        <div id="acc-charts" class="chart-row"></div>
+    </div>
+
+    <div class="arrow-down"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4v13m0 0l-5-5m5 5l5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+    <!-- ================================================================ -->
+    <!--  STEP 2 — Integration: acceleration → velocity                   -->
+    <!-- ================================================================ -->
+    <div class="step" id="step-2">
+        <div class="step-label vel"><span class="num">2</span> Snelheid berekenen</div>
+        <h2>Van versnelling naar snelheid: stap voor stap optellen</h2>
+        <p class="prose">
+            Versnelling vertelt hoe snel de grond <em>verandert</em> van snelheid,
+            maar niet hoe snel de grond zelf beweegt. Daarvoor moeten we de
+            versnelling <strong>optellen over de tijd</strong>.
+        </p>
+        <p class="prose">
+            Stel je voor: je zit in een stilstaande auto. De bestuurder geeft
+            2 seconden lang gas met een versnelling van 5 km/h per seconde.
+            Na die 2 seconden rijd je 10 km/h. De versnelling <em>stapelt zich
+            op</em> tot snelheid. Precies datzelfde doen we hier: we lopen het
+            versnellingssignaal van links naar rechts door en tellen elk stukje
+            versnelling erbij op. Het resultaat is de <strong>grondsnelheid</strong>
+            in mm/s.
+        </p>
+        <p class="prose">
+            Let op het verschil: de snelheidscurve is gladder en breder dan de
+            versnelling. De pieken van de versnelling middelen uit door het
+            optellen. Het <strong>hoogste punt</strong> van de snelheidscurve is
+            de <strong>piekgrondsnelheid</strong> (PGV) — het getal dat bepaalt
+            of een huis versterkt moet worden.
+        </p>
+
+        <div id="vel-charts" class="chart-row"></div>
+    </div>
+
+    <footer>
+        Databron: <a href="https://rdsa.knmi.nl" target="_blank" rel="noopener">KNMI – RDSA</a> |
+        Koninklijk Nederlands Meteorologisch Instituut |
+        G-netwerk Groningen
+    </footer>
+
+</div>
+
+<script>
+// ── Colors ───────────────────────────────────────────────────────────────────
+const ACC_COLOR = '#B54E35';
+const VEL_COLOR = '#2D5F7C';
+const MARGIN = { top: 12, right: 12, bottom: 32, left: 48 };
+
+// ── Load and render ──────────────────────────────────────────────────────────
+d3.json('data/waveform_data.json?v=' + Date.now()).then(data => {
+    try { render(data); }
+    catch(err) { console.error(err); document.getElementById('event-pill').innerHTML =
+        `<span style="color:#c00">Renderfout: ${err.message}</span>`; }
+}).catch(err => {
+    document.getElementById('event-pill').innerHTML =
+        `<span style="color:#c00">Fout: ${err.message}. Voer eerst <code>python fetch_data.py</code> uit.</span>`;
+});
+
+function render(data) {
+    renderEventPill(data);
+
+    const allCharts = [];
+
+    // Create acceleration + velocity charts for each station
+    data.stations.forEach((s, i) => {
+        const sta = s.station;
+        const label = `${sta.code} — ${sta.distance_km.toFixed(1)} km van epicentrum`;
+
+        // Acceleration chart
+        const accCard = createChartCard('acc-charts', 'acc', label);
+        const accChart = timeChart(accCard.container, accCard.tooltip, s.acceleration, ACC_COLOR);
+        allCharts.push(accChart);
+
+        // Velocity chart
+        const velCard = createChartCard('vel-charts', 'vel', label);
+        const velChart = timeChart(velCard.container, velCard.tooltip, s.velocity, VEL_COLOR, s.velocity.pgv);
+        allCharts.push(velChart);
+    });
+
+    // Sync crosshairs across all time-domain charts
+    syncCrosshairs(allCharts);
+}
+
+// ── Create a chart card in a container ──────────────────────────────────────
+function createChartCard(parentId, type, title) {
+    const parent = document.getElementById(parentId);
+    const card = document.createElement('div');
+    card.className = `chart-card ${type}`;
+    card.innerHTML =
+        `<div class="card-title">${title}</div>` +
+        `<div class="chart-container">` +
+        `  <div class="chart-tooltip"></div>` +
+        `</div>`;
+    parent.appendChild(card);
+    return {
+        container: card.querySelector('.chart-container'),
+        tooltip: card.querySelector('.chart-tooltip'),
+    };
+}
+
+// ── Event pill ───────────────────────────────────────────────────────────────
+function renderEventPill(data) {
+    const e = data.event;
+    const d = new Date(e.date).toLocaleDateString('nl-NL',
+        { day: 'numeric', month: 'long', year: 'numeric' });
+    const stationCodes = data.stations.map(s => s.station.code).join(', ');
+    document.getElementById('event-pill').innerHTML =
+        `<span><strong>${e.name}</strong></span>` +
+        `<span>${d}</span>` +
+        `<span class="mag">M${e.magnitude}</span>` +
+        `<span>Diepte: <strong>${e.depth_km} km</strong></span>` +
+        `<span>Stations: <strong>${stationCodes}</strong></span>`;
+}
+
+// ── Reusable time-domain chart ───────────────────────────────────────────────
+function timeChart(containerEl, tooltipEl, series, color, peak) {
+    const container = d3.select(containerEl);
+    const tooltip   = d3.select(tooltipEl);
+    const W = containerEl.clientWidth;
+    const H = W * 0.55;
+    const iW = W - MARGIN.left - MARGIN.right;
+    const iH = H - MARGIN.top  - MARGIN.bottom;
+
+    const t = series.times, v = series.data;
+    const x = d3.scaleLinear().domain(d3.extent(t)).range([0, iW]);
+    const yAbs = d3.max(v, d => Math.abs(d)) * 1.15;
+    const y = d3.scaleLinear().domain([-yAbs, yAbs]).range([iH, 0]);
+
+    const svg = container.append('svg')
+        .attr('viewBox', `0 0 ${W} ${H}`);
+    const g = svg.append('g')
+        .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
+
+    // grid
+    g.selectAll('.grid').data(y.ticks(4)).join('line')
+        .attr('x1',0).attr('x2',iW)
+        .attr('y1',d=>y(d)).attr('y2',d=>y(d))
+        .attr('stroke','#E3E0DB');
+    // zero
+    g.append('line').attr('x1',0).attr('x2',iW)
+        .attr('y1',y(0)).attr('y2',y(0)).attr('stroke','#D0CDC7');
+
+    // waveform
+    g.append('path').datum(v)
+        .attr('fill','none').attr('stroke',color).attr('stroke-width',1.5)
+        .attr('d', d3.line().x((_,i)=>x(t[i])).y(d=>y(d)));
+
+    // PGV annotation
+    if (peak) {
+        const px = x(peak.time), py = y(peak.signed_value);
+        g.append('line').attr('x1',px).attr('x2',px).attr('y1',0).attr('y2',iH)
+            .attr('stroke',color).attr('stroke-dasharray','5,3').attr('opacity',0.45);
+        g.append('line').attr('x1',0).attr('x2',px).attr('y1',py).attr('y2',py)
+            .attr('stroke',color).attr('stroke-dasharray','5,3').attr('opacity',0.3);
+        g.append('circle').attr('cx',px).attr('cy',py).attr('r',6)
+            .attr('fill',color).attr('stroke','#fff').attr('stroke-width',2.5);
+        g.append('text').attr('x',px+10).attr('y',py - 8)
+            .attr('font-size','10px').attr('font-weight','700').attr('fill',color)
+            .text(`PGV ${peak.value.toFixed(1)}`);
+    }
+
+    // axes
+    g.append('g').attr('transform',`translate(0,${iH})`)
+        .call(d3.axisBottom(x).ticks(5).tickFormat(d=>d+' s'))
+        .selectAll('text').attr('font-size','10px');
+    g.append('g').call(d3.axisLeft(y).ticks(4))
+        .selectAll('text').attr('font-size','10px');
+
+    // axis labels
+    svg.append('text').attr('x',MARGIN.left+iW/2).attr('y',H-3)
+        .attr('text-anchor','middle').attr('font-size','10px').attr('fill','#7A7A7A')
+        .text('Tijd na oorsprong (s)');
+    svg.append('text').attr('transform','rotate(-90)')
+        .attr('x',-(MARGIN.top+iH/2)).attr('y',13)
+        .attr('text-anchor','middle').attr('font-size','10px').attr('fill','#7A7A7A')
+        .text(series.unit);
+
+    // hover
+    const ch = g.append('line').attr('y1',0).attr('y2',iH)
+        .attr('stroke','#B8B4AE').attr('stroke-dasharray','3,2').attr('opacity',0);
+    const hr = g.append('rect').attr('width',iW).attr('height',iH)
+        .attr('fill','none').attr('pointer-events','all');
+
+    return { svg, g, x, y, t, v, ch, hr, tooltip, iW, iH, vbW:W, unit: series.unit };
+}
+
+// ── Sync crosshairs ──────────────────────────────────────────────────────────
+function syncCrosshairs(charts) {
+    const bisect = d3.bisector(d=>d).left;
+
+    function update(chart, time) {
+        const px = chart.x(time);
+        if (px < 0 || px > chart.iW) {
+            chart.ch.attr('opacity',0); chart.tooltip.style('opacity',0); return;
+        }
+        chart.ch.attr('x1',px).attr('x2',px).attr('opacity',0.6);
+        const i = Math.max(0, Math.min(bisect(chart.t, time), chart.t.length-1));
+        const sc = (chart.svg.node().clientWidth||chart.svg.node().getBoundingClientRect().width)/chart.vbW;
+        chart.tooltip
+            .html(`<strong>t = ${chart.t[i].toFixed(2)} s</strong><br>${chart.v[i].toFixed(2)} ${chart.unit}`)
+            .style('opacity',1)
+            .style('left',((px+MARGIN.left+10)*sc)+'px')
+            .style('top',((chart.y(chart.v[i])+MARGIN.top-10)*sc)+'px');
+    }
+
+    charts.forEach(src => {
+        src.hr.on('mousemove', ev => {
+            const [mx] = d3.pointer(ev, src.g.node());
+            const time = src.x.invert(mx);
+            charts.forEach(c => update(c, time));
+        }).on('mouseleave', () => {
+            charts.forEach(c => { c.ch.attr('opacity',0); c.tooltip.style('opacity',0); });
+        });
+    });
+}
+</script>
+</body>
+</html>
