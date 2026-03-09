@@ -11,16 +11,17 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --color-acc: #B54E35;
+            --color-acc: #C44D3F;
             --color-vel: #2D5F7C;
+            --color-dc-accent: #C04040;
             --color-bg: #FAFAF8;
             --color-surface: #F0EDE8;
             --color-text: #2D2D2D;
-            --color-muted: #5A5A5A;
+            --color-muted: #6B6B6B;
+            --color-caption: #707070;
             --color-border: #E3E0DB;
-            --font: 'Libre Franklin', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            --font-display: 'PT Serif', 'Source Serif Pro', Georgia, serif;
-            --max-width: 1080px;
+            --font: 'Libre Franklin', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-display: 'PT Serif', Georgia, serif;
         }
 
         body {
@@ -31,189 +32,221 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        .container {
-            max-width: var(--max-width);
+        /* ── Title section ───────────────────────────────────────────────── */
+        .title-section {
+            max-width: 640px;
             margin: 0 auto;
-            padding: 2.5rem 1.5rem;
-        }
-
-        /* ── Header ─────────────────────────────────────────────────────── */
-        header {
+            padding: 4rem 1.5rem 2rem;
             text-align: center;
-            margin-bottom: 2.5rem;
         }
-        header h1 {
+        .title-section h1 {
             font-family: var(--font-display);
-            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            font-size: clamp(1.6rem, 4vw, 2.4rem);
             font-weight: 700;
             line-height: 1.25;
             margin-bottom: 0.75rem;
             letter-spacing: -0.01em;
         }
-        header .subtitle {
+        .title-section h1::before {
+            content: '';
+            display: block;
+            width: 48px;
+            height: 4px;
+            background: var(--color-dc-accent);
+            margin: 0 auto 1rem;
+            border-radius: 2px;
+        }
+        .title-section .subtitle {
+            font-family: var(--font-display);
+            font-style: italic;
             font-size: 1.05rem;
             color: var(--color-muted);
-            max-width: 520px;
+            margin-bottom: 1.5rem;
+        }
+
+        /* ── Scroll reveal ───────────────────────────────────────────────── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.5s ease; /* exit: just fade, no slide */
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.7s ease, transform 0.7s ease; /* enter: fade + slide */
+        }
+
+        /* ── Article prose ───────────────────────────────────────────────── */
+        .article-prose {
+            max-width: 640px;
             margin: 0 auto;
+            padding: 2rem 1.5rem;
         }
-
-        /* ── Event pill ─────────────────────────────────────────────────── */
-        .event-pill {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.6rem 1.5rem;
-            justify-content: center;
-            background: var(--color-surface);
-            border: none;
-            border-radius: 8px;
-            padding: 1rem 1.25rem;
-            margin-bottom: 3rem;
-            font-size: 0.88rem;
-            color: var(--color-muted);
-        }
-        .event-pill strong {
-            color: var(--color-text);
-            font-weight: 600;
-        }
-        .event-pill .mag {
-            background: var(--color-acc);
-            color: #fff;
-            padding: 0.1rem 0.5rem;
-            border-radius: 4px;
-            font-weight: 700;
-            font-size: 0.85rem;
-        }
-
-        /* ── Step blocks ────────────────────────────────────────────────── */
-        .step {
-            margin-bottom: 3.5rem;
-        }
-        .step-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.78rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            margin-bottom: 0.5rem;
-        }
-        .step-label .num {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            color: #fff;
-            font-size: 0.72rem;
-        }
-        .step-label.acc  .num { background: var(--color-acc); }
-        .step-label.acc       { color: var(--color-acc); }
-        .step-label.vel  .num { background: var(--color-vel); }
-        .step-label.vel       { color: var(--color-vel); }
-
-        .step h2 {
+        .article-prose p {
             font-family: var(--font-display);
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-            line-height: 1.3;
-        }
-
-        .step .prose {
-            font-size: 0.95rem;
+            font-size: 1.05rem;
+            line-height: 1.85;
             color: var(--color-text);
             margin-bottom: 1.25rem;
-            line-height: 1.75;
         }
-        .step .prose strong {
-            color: var(--color-text);
-        }
+        .article-prose p:last-child { margin-bottom: 0; }
+        .article-prose strong { font-weight: 700; }
+        .article-prose em { font-style: italic; }
 
-        /* ── Chart row (3 side-by-side) ────────────────────────────────── */
-        .chart-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-        }
-        @media (max-width: 700px) {
-            .chart-row { grid-template-columns: 1fr; }
-        }
-
-        /* ── Chart card ─────────────────────────────────────────────────── */
-        .chart-card {
-            background: #fff;
-            border: 1px solid var(--color-border);
-            border-radius: 8px;
-            padding: 0.75rem 0.75rem;
+        /* ── Inline charts ──────────────────────────────────────────────── */
+        .inline-chart {
+            max-width: min(95vw, 1100px);
+            margin: 2rem auto 3rem;
+            padding: 0 1rem;
             position: relative;
         }
-        .chart-card.acc  { border-top: 3px solid var(--color-acc); }
-        .chart-card.vel  { border-top: 3px solid var(--color-vel); }
-
-        .chart-card .card-title {
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: var(--color-muted);
-            margin-bottom: 0.4rem;
-        }
-
-        .chart-container {
-            position: relative;
-            width: 100%;
-        }
-        .chart-container svg {
+        .inline-chart svg {
             display: block;
             width: 100%;
             height: auto;
         }
-
-        /* Tooltip */
-        .chart-tooltip {
+        .inline-chart .tooltip {
             position: absolute;
             pointer-events: none;
-            background: rgba(26, 26, 26, 0.92);
+            background: rgba(30, 30, 30, 0.92);
             color: #fff;
             padding: 0.35rem 0.6rem;
-            border-radius: 6px;
+            border-radius: 4px;
             font-size: 0.75rem;
-            line-height: 1.4;
+            line-height: 1.5;
             white-space: nowrap;
             opacity: 0;
-            transition: opacity 0.12s;
-            z-index: 10;
+            transition: opacity 0.15s;
+            z-index: 20;
         }
-
-        /* ── Transition arrow ───────────────────────────────────────────── */
-        .arrow-down {
+        .inline-chart .chart-legend {
             display: flex;
             justify-content: center;
-            padding: 0.5rem 0 1.5rem;
-            color: #B8B4AE;
+            gap: 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--color-muted);
+            margin-top: 0.5rem;
         }
-        .arrow-down svg {
-            width: 32px;
-            height: 32px;
+        .inline-chart .chart-legend .swatch {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            margin-right: 5px;
+            vertical-align: middle;
         }
 
-        /* ── Footer ─────────────────────────────────────────────────────── */
+        /* ── Scrollytelling (sticky chart + scrolling text) ─────────────── */
+        .scrolly {
+            display: flex;
+            align-items: flex-start;
+            max-width: 1400px;
+            margin: 3rem auto 0;
+            border-top: 1px solid var(--color-border);
+            padding-top: 1rem;
+        }
+        .scrolly-steps {
+            flex: 0 0 36%;
+            padding: 0 1.5rem 0 2rem;
+            z-index: 2;
+        }
+        .step {
+            min-height: 85vh;
+            display: flex;
+            align-items: center;
+            padding: 2rem 0;
+        }
+        .step:last-child { min-height: 60vh; }
+        .step-text {
+            background: rgba(250, 250, 248, 0.95);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border-radius: 8px;
+            padding: 1.5rem 1.75rem;
+            border: 1px solid var(--color-border);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            opacity: 0.25;
+            transform: translateY(12px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .step.active .step-text {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .step-text p {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            line-height: 1.85;
+            color: var(--color-text);
+            margin-bottom: 1rem;
+        }
+        .step-text p:last-child { margin-bottom: 0; }
+        .step-text strong { font-weight: 700; }
+        .step-text em { font-style: italic; }
+
+        .scrolly-chart {
+            flex: 1;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem 2rem 0.5rem;
+        }
+        .scrolly-chart svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        .scrolly-chart .tooltip {
+            position: absolute;
+            pointer-events: none;
+            background: rgba(30, 30, 30, 0.92);
+            color: #fff;
+            padding: 0.35rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            line-height: 1.5;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 20;
+        }
+        .scrolly-chart .chart-legend {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--color-muted);
+            margin-top: 0.5rem;
+        }
+        .scrolly-chart .chart-legend .swatch {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        /* ── Footer ──────────────────────────────────────────────────────── */
         footer {
             text-align: center;
-            padding: 1.5rem 0 0;
-            font-size: 0.78rem;
-            color: var(--color-muted);
+            padding: 2rem 1.5rem;
+            font-size: 0.75rem;
+            color: var(--color-caption);
             border-top: 1px solid var(--color-border);
+            max-width: 640px;
+            margin: 0 auto;
         }
-        footer a {
-            color: var(--color-vel);
-            text-decoration: none;
-        }
-        footer a:hover {
-            text-decoration: underline;
-        }
+        footer a { color: var(--color-vel); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
 
-        /* ── Loading ────────────────────────────────────────────────────── */
+        /* ── Loading state ───────────────────────────────────────────────── */
         .loading {
             text-align: center;
             padding: 3rem;
@@ -228,266 +261,1187 @@
             margin: 0 auto 0.75rem;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Responsive ──────────────────────────────────────────────────── */
+        @media (max-width: 840px) {
+            .article-prose { padding: 0 1.2rem 1.5rem; }
+            .article-prose p { font-size: 0.95rem; }
+            .inline-chart { padding: 0 0.5rem; }
+            .scrolly { flex-direction: column; margin-top: 2rem; }
+            .scrolly-chart {
+                order: -1;
+                height: 50vh;
+                position: sticky;
+                top: 0;
+                flex: none;
+                width: 100%;
+                padding: 1rem;
+                border-bottom: 1px solid var(--color-border);
+                background: var(--color-bg);
+            }
+            .scrolly-steps {
+                flex: none;
+                width: 100%;
+                padding: 1rem 1.2rem;
+            }
+            .step { min-height: 55vh; }
+        }
     </style>
 </head>
 <body>
-<div class="container">
 
-    <header>
-        <h1>Van sensor tot piekgrondsnelheid</h1>
-        <p class="subtitle">
-            Hoe komen seismologen van een rauw signaal uit de grond
-            tot het getal dat vertelt hoeveel schade een aardbeving kan veroorzaken?
-        </p>
-    </header>
-
-    <div class="event-pill" id="event-pill">
-        <div class="loading"><div class="spinner"></div>Data laden...</div>
-    </div>
-
-    <!-- ================================================================ -->
-    <!--  STEP 1 — Acceleration (3 stations)                              -->
-    <!-- ================================================================ -->
-    <div class="step" id="step-1">
-        <div class="step-label acc"><span class="num">1</span> Versnelling meten</div>
-        <h2>Sensoren in de grond vangen de schok op</h2>
-        <p class="prose">
-            Verspreid over Groningen liggen honderden <strong>accelerometers</strong> in
-            de grond — kastjes ter grootte van een schoenendoos. Binnenin hangt een
-            gewichtje aan een veer. Als de grond schudt, beweegt het kastje mee, maar
-            het gewichtje blijft even achter. Dat verschil wordt gemeten als een
-            elektrisch signaal.
-        </p>
-        <p class="prose">
-            Het KNMI vertaalt dit signaal naar <strong>grondversnelling</strong>:
-            hoeveel de snelheid van de grond <em>per seconde verandert</em>, uitgedrukt
-            in cm/s². Denk aan een auto die optrekt — hoe harder je het gaspedaal
-            intrapt, hoe groter de versnelling en hoe sterker je in je stoel wordt
-            gedrukt.
-        </p>
-        <p class="prose">
-            Hieronder zie je drie stations op verschillende afstanden van het
-            epicentrum. Let op: dichtbij (links) slaat de naald flink uit. Een
-            paar kilometer verderop (rechts) is hetzelfde bevingsmoment al veel
-            zwakker. De schokgolf verliest energie onderweg.
-        </p>
-
-        <div id="acc-charts" class="chart-row"></div>
-    </div>
-
-    <div class="arrow-down"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4v13m0 0l-5-5m5 5l5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-
-    <!-- ================================================================ -->
-    <!--  STEP 2 — Integration: acceleration → velocity                   -->
-    <!-- ================================================================ -->
-    <div class="step" id="step-2">
-        <div class="step-label vel"><span class="num">2</span> Snelheid berekenen</div>
-        <h2>Van versnelling naar snelheid: stap voor stap optellen</h2>
-        <p class="prose">
-            Versnelling vertelt hoe snel de grond <em>verandert</em> van snelheid,
-            maar niet hoe snel de grond zelf beweegt. Daarvoor moeten we de
-            versnelling <strong>optellen over de tijd</strong>.
-        </p>
-        <p class="prose">
-            Stel je voor: je zit in een stilstaande auto. De bestuurder geeft
-            2 seconden lang gas met een versnelling van 5 km/h per seconde.
-            Na die 2 seconden rijd je 10 km/h. De versnelling <em>stapelt zich
-            op</em> tot snelheid. Precies datzelfde doen we hier: we lopen het
-            versnellingssignaal van links naar rechts door en tellen elk stukje
-            versnelling erbij op. Het resultaat is de <strong>grondsnelheid</strong>
-            in mm/s.
-        </p>
-        <p class="prose">
-            Let op het verschil: de snelheidscurve is gladder en breder dan de
-            versnelling. De pieken van de versnelling middelen uit door het
-            optellen. Het <strong>hoogste punt</strong> van de snelheidscurve is
-            de <strong>piekgrondsnelheid</strong> (PGV) — het getal dat bepaalt
-            of een huis versterkt moet worden.
-        </p>
-
-        <div id="vel-charts" class="chart-row"></div>
-    </div>
-
-    <footer>
-        Databron: <a href="https://rdsa.knmi.nl" target="_blank" rel="noopener">KNMI – RDSA</a> |
-        Koninklijk Nederlands Meteorologisch Instituut |
-        G-netwerk Groningen
-    </footer>
-
+<div class="title-section">
+    <h1 id="page-title">Van sensor tot piekgrondsnelheid</h1>
+    <p class="subtitle" id="page-subtitle">
+        Hoe komen seismologen van een rauw signaal uit de grond tot het getal dat
+        vertelt hoeveel schade een aardbeving kan veroorzaken?
+    </p>
 </div>
 
+<div class="article-prose reveal" id="prose-intro"></div>
+
+<div class="inline-chart reveal" id="inline-acc">
+    <svg></svg>
+    <div class="tooltip"></div>
+</div>
+
+<div class="article-prose reveal" id="prose-versnelling-snelheid"></div>
+
+<div class="inline-chart reveal" id="inline-vel">
+    <svg></svg>
+    <div class="tooltip"></div>
+</div>
+
+<div class="article-prose reveal" id="prose-pgv-uitleg"></div>
+
+<div class="inline-chart reveal" id="inline-sparklines">
+    <svg></svg>
+    <div class="tooltip"></div>
+</div>
+
+<section class="scrolly" id="scrolly">
+    <div class="scrolly-steps">
+        <div class="step" data-step="scatter">
+            <div class="step-text" id="prose-scatter"></div>
+        </div>
+        <div class="step" data-step="drie-bevingen">
+            <div class="step-text" id="prose-drie-bevingen"></div>
+        </div>
+        <div class="step" data-step="boxplots">
+            <div class="step-text" id="prose-boxplots"></div>
+        </div>
+        <div class="step" data-step="internationaal">
+            <div class="step-text" id="prose-internationaal"></div>
+        </div>
+    </div>
+    <div class="scrolly-chart" id="scrolly-chart">
+        <svg></svg>
+        <div class="tooltip"></div>
+        <div class="chart-legend"></div>
+    </div>
+</section>
+
+<footer>
+    Databron: <a href="https://rdsa.knmi.nl" target="_blank" rel="noopener">KNMI – RDSA</a> |
+    <a href="https://www.j-shis.bosai.go.jp" target="_blank" rel="noopener">J-SHIS</a> |
+    <a href="https://itaca.mi.ingv.it" target="_blank" rel="noopener">ITACA</a> |
+    <a href="https://www.strongmotioncenter.org" target="_blank" rel="noopener">CESMD</a>
+</footer>
+
 <script>
-// ── Colors ───────────────────────────────────────────────────────────────────
-const ACC_COLOR = '#B54E35';
-const VEL_COLOR = '#2D5F7C';
-const MARGIN = { top: 12, right: 12, bottom: 32, left: 48 };
+// ── Load tekst.md ───────────────────────────────────────────────────────────
+fetch('tekst.md?v=' + Date.now())
+    .then(r => r.text())
+    .then(md => {
+        // Parse title + subtitle from h1 and first paragraph
+        const titleMatch = md.match(/^# (.+)$/m);
+        const subtitleMatch = md.match(/^# .+\n\n(.+)\n\n---/s);
+        if (titleMatch) document.getElementById('page-title').textContent = titleMatch[1];
+        if (subtitleMatch) document.getElementById('page-subtitle').textContent = subtitleMatch[1];
 
-// ── Load and render ──────────────────────────────────────────────────────────
-d3.json('data/waveform_data.json?v=' + Date.now()).then(data => {
-    try { render(data); }
-    catch(err) { console.error(err); document.getElementById('event-pill').innerHTML =
-        `<span style="color:#c00">Renderfout: ${err.message}</span>`; }
-}).catch(err => {
-    document.getElementById('event-pill').innerHTML =
-        `<span style="color:#c00">Fout: ${err.message}. Voer eerst <code>python fetch_data.py</code> uit.</span>`;
-});
-
-function render(data) {
-    renderEventPill(data);
-
-    const allCharts = [];
-
-    // Create acceleration + velocity charts for each station
-    data.stations.forEach((s, i) => {
-        const sta = s.station;
-        const label = `${sta.code} — ${sta.distance_km.toFixed(1)} km van epicentrum`;
-
-        // Acceleration chart
-        const accCard = createChartCard('acc-charts', 'acc', label);
-        const accChart = timeChart(accCard.container, accCard.tooltip, s.acceleration, ACC_COLOR);
-        allCharts.push(accChart);
-
-        // Velocity chart
-        const velCard = createChartCard('vel-charts', 'vel', label);
-        const velChart = timeChart(velCard.container, velCard.tooltip, s.velocity, VEL_COLOR, s.velocity.pgv);
-        allCharts.push(velChart);
+        // Parse sections: split on ## headings
+        const sections = md.split(/^## /m).slice(1);
+        sections.forEach(sec => {
+            const lines = sec.trim().split('\n');
+            const id = lines[0].trim();
+            const body = lines.slice(1).join('\n').trim();
+            const el = document.getElementById('prose-' + id);
+            if (!el) return;
+            // Convert markdown paragraphs to HTML
+            el.innerHTML = body
+                .split(/\n\n+/)
+                .map(p => {
+                    let html = p.trim()
+                        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.+?)\*/g, '<em>$1</em>');
+                    return '<p>' + html + '</p>';
+                })
+                .join('\n');
+        });
     });
 
-    // Sync crosshairs across all time-domain charts
-    syncCrosshairs(allCharts);
+// ── Scroll reveal ───────────────────────────────────────────────────────────
+const revealObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            // Prose: reveal once and stay
+            if (!entry.target.classList.contains('inline-chart')) {
+                revealObserver.unobserve(entry.target);
+            }
+        } else if (entry.target.classList.contains('inline-chart')) {
+            // Charts: fade out when scrolled away
+            entry.target.classList.remove('visible');
+        }
+    });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// ── Config ──────────────────────────────────────────────────────────────────
+const COLORS = {
+    nl: '#2D5F7C', it: '#C04040', ca: '#A07A2A', jp: '#6B9080',
+    vel: '#2D5F7C', acc: '#C44D3F', muted: '#B8B4AE',
+};
+const COUNTRY_META = {
+    Netherlands: { color: COLORS.nl, label: 'Nederland' },
+    Japan:       { color: COLORS.jp, label: 'Japan' },
+    Italy:       { color: COLORS.it, label: 'Italië' },
+    California:  { color: COLORS.ca, label: 'Californië' },
+};
+const EVENT_COLORS = ['#2D5F7C', '#8E7B98', '#A07A2A'];
+
+const M = { top: 40, right: 30, bottom: 50, left: 60 };
+const VB_W = 800, VB_H = 480;
+
+// ── State ───────────────────────────────────────────────────────────────────
+let DATA, iW, iH;
+let activeTip = null, activeChartEl = null;
+
+// ── Load ────────────────────────────────────────────────────────────────────
+Promise.all([
+    d3.json('data/scroll_data.json?v=2'),
+    d3.json('data/mini_waveforms.json?v=2'),
+]).then(([scrollData, miniWaves]) => {
+    DATA = scrollData;
+    DATA.miniWaveforms = miniWaves;
+    drawInlineWaveforms(scrollData.waveform);
+    initAllCharts();
+    initScrolly();
+}).catch(err => {
+    console.error('Data laden mislukt:', err);
+});
+
+// ── Inline chart setup ──────────────────────────────────────────────────────
+function setupChart(containerId, vbH) {
+    const h = vbH || VB_H;
+    const container = document.getElementById(containerId);
+    activeTip = container.querySelector('.tooltip');
+    activeChartEl = container;
+
+    iW = VB_W - M.left - M.right;
+    iH = h - M.top - M.bottom;
+
+    const svgEl = d3.select(container).select('svg')
+        .attr('viewBox', `0 0 ${VB_W} ${h}`);
+    svgEl.selectAll('*').remove();
+
+    return svgEl.append('g')
+        .attr('transform', `translate(${M.left},${M.top})`);
 }
 
-// ── Create a chart card in a container ──────────────────────────────────────
-function createChartCard(parentId, type, title) {
-    const parent = document.getElementById(parentId);
-    const card = document.createElement('div');
-    card.className = `chart-card ${type}`;
-    card.innerHTML =
-        `<div class="card-title">${title}</div>` +
-        `<div class="chart-container">` +
-        `  <div class="chart-tooltip"></div>` +
-        `</div>`;
-    parent.appendChild(card);
-    return {
-        container: card.querySelector('.chart-container'),
-        tooltip: card.querySelector('.chart-tooltip'),
+function initAllCharts() {
+    const charts = [
+        { id: 'inline-sparklines', draw: showManyWaveforms, vbH: 480 },
+    ];
+
+    // Draw each chart when its reveal animation triggers
+    charts.forEach(({ id, draw, vbH }) => {
+        const container = document.getElementById(id);
+        const obs = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting) {
+                // Small delay so the fade-in is visible before content draws
+                setTimeout(() => {
+                    const g = setupChart(id, vbH);
+                    draw(g);
+                }, 200);
+                obs.disconnect();
+            }
+        }, { threshold: 0.15 });
+        obs.observe(container);
+    });
+}
+
+// ── Scrollytelling state machine ────────────────────────────────────────────
+function initScrolly() {
+    const chartContainer = document.getElementById('scrolly-chart');
+    const steps = document.querySelectorAll('.scrolly .step');
+    let currentStep = null;
+
+    const STEPS = ['scatter', 'drie-bevingen', 'boxplots', 'internationaal'];
+
+    // Ensure dimensions are set
+    iW = VB_W - M.left - M.right;
+    iH = VB_H - M.top - M.bottom;
+
+    const svgEl = d3.select(chartContainer).select('svg')
+        .attr('viewBox', `0 0 ${VB_W} ${VB_H}`);
+
+    // Shared scales: scatter ↔ boxplot continuity (same y-domain)
+    const sharedY = d3.scaleLog().base(10).domain([0.01, 50]).range([iH, 0]);
+    const scatX = d3.scaleLog().base(10).domain([0.8, 55]).range([0, iW]);
+    const boxX = d3.scaleBand().domain(BIN_LABELS).range([0, iW]).padding(0.35);
+
+    function stepIdx(name) { return STEPS.indexOf(name); }
+
+    function setGlobalCtx() {
+        activeTip = chartContainer.querySelector('.tooltip');
+        activeChartEl = chartContainer;
+        iW = VB_W - M.left - M.right;
+        iH = VB_H - M.top - M.bottom;
+    }
+
+    function activateStep(stepName) {
+        if (stepName === currentStep) return;
+        const fromIdx = currentStep ? stepIdx(currentStep) : -1;
+        const toIdx = stepIdx(stepName);
+        const prevStep = currentStep;
+        currentStep = stepName;
+
+        setGlobalCtx();
+        const legend = chartContainer.querySelector('.chart-legend');
+        if (legend) legend.innerHTML = '';
+
+        // Forward single-step → animated transition
+        if (fromIdx >= 0 && toIdx === fromIdx + 1) {
+            forwardTransition(prevStep, stepName);
+        } else {
+            crossfadeRedraw(stepName);
+        }
+
+        steps.forEach(s => s.classList.remove('active'));
+        document.querySelector(`.step[data-step="${stepName}"]`)?.classList.add('active');
+    }
+
+    // ── Crossfade (backward or jump) ────────────────────────────────
+    function crossfadeRedraw(stepName) {
+        svgEl.selectAll('.scrolly-group')
+            .transition().duration(250).attr('opacity', 0)
+            .on('end', function() { d3.select(this).remove(); });
+
+        const g = svgEl.append('g')
+            .attr('class', 'scrolly-group')
+            .attr('transform', `translate(${M.left},${M.top})`)
+            .attr('opacity', 0);
+
+        drawFullState(stepName, g);
+        g.transition().delay(200).duration(400).attr('opacity', 1);
+    }
+
+    function drawFullState(stepName, g) {
+        switch (stepName) {
+            case 'scatter':        drawScatterFull(g, false); break;
+            case 'drie-bevingen':  drawScatterFull(g, true); break;
+            case 'boxplots':       showBoxPlots(g); break;
+            case 'internationaal': showInternational(g); break;
+        }
+    }
+
+    // ── Scatter state (one or three events) ─────────────────────────
+    function drawScatterFull(g, allEvents) {
+        const axesG = g.append('g').attr('class', 'axes-layer');
+        drawLogAxes(axesG, scatX, sharedY);
+        axisLabel(axesG, 'Afstand tot epicentrum (km)', 'PGV (mm/s)');
+
+        const dotsG = g.append('g').attr('class', 'dots-layer');
+        const events = allEvents ? DATA.groningenEvents : [DATA.zeerijp];
+        events.forEach((ev, ei) => {
+            const color = allEvents ? EVENT_COLORS[ei] : COLORS.nl;
+            const opac = allEvents ? 0.5 : 0.55;
+            addDots(dotsG, ev.stations, ei, ev.name, color, opac, scatX, allEvents);
+        });
+
+        if (allEvents) {
+            showLegend(activeChartEl, DATA.groningenEvents.map((ev, i) => ({
+                color: EVENT_COLORS[i], label: ev.name
+            })));
+        }
+    }
+
+    function addDots(container, stations, evIdx, evName, color, opac, xScale, showEvent) {
+        container.selectAll(`.dot-ev-${evIdx}`)
+            .data(stations.map(s => ({
+                ...s, eventIdx: evIdx, eventName: evName,
+                bin: getBinIndex(s.dist)
+            })))
+            .join('circle')
+            .attr('class', `scatter-dot dot-ev-${evIdx}`)
+            .attr('cx', d => xScale(d.dist))
+            .attr('cy', d => sharedY(Math.max(d.pgv, 0.01)))
+            .attr('r', 3.5)
+            .attr('fill', color)
+            .attr('opacity', opac)
+            .style('cursor', 'pointer')
+            .on('mouseenter', function(event, d) {
+                d3.select(this).attr('r', 6).attr('opacity', 1);
+                const lbl = showEvent ? d.eventName : (d.station_id || '');
+                showTip(`<b>${lbl}</b><br>${d.dist.toFixed(1)} km<br>${d.pgv.toFixed(2)} mm/s`, event);
+            })
+            .on('mousemove', (event, d) => {
+                const lbl = showEvent ? d.eventName : (d.station_id || '');
+                showTip(`<b>${lbl}</b><br>${d.dist.toFixed(1)} km<br>${d.pgv.toFixed(2)} mm/s`, event);
+            })
+            .on('mouseleave', function(event) {
+                d3.select(this).attr('r', 3.5).attr('opacity', opac);
+                hideTip(event);
+            });
+    }
+
+    // ── Forward transitions ─────────────────────────────────────────
+    function forwardTransition(from, to) {
+        const g = svgEl.select('.scrolly-group');
+        if (g.empty()) { crossfadeRedraw(to); return; }
+
+        if (from === 'scatter' && to === 'drie-bevingen') {
+            fwdScatterToThree(g);
+        } else if (from === 'drie-bevingen' && to === 'boxplots') {
+            fwdThreeToBox(g);
+        } else {
+            crossfadeRedraw(to);
+        }
+    }
+
+    // scatter → drie-bevingen: add two event clouds in same chart
+    function fwdScatterToThree(g) {
+        const dotsG = g.select('.dots-layer');
+
+        // Recolor existing GRN_24 dots
+        dotsG.selectAll('.dot-ev-0')
+            .transition().duration(300)
+            .attr('fill', EVENT_COLORS[0]);
+
+        // Add GRN_26 + GRN_35
+        [1, 2].forEach(ei => {
+            const ev = DATA.groningenEvents[ei];
+            dotsG.selectAll(`.dot-ev-${ei}`)
+                .data(ev.stations.map(s => ({
+                    ...s, eventIdx: ei, eventName: ev.name,
+                    bin: getBinIndex(s.dist)
+                })))
+                .join('circle')
+                .attr('class', `scatter-dot dot-ev-${ei}`)
+                .attr('cx', d => scatX(d.dist))
+                .attr('cy', d => sharedY(Math.max(d.pgv, 0.01)))
+                .attr('r', 0)
+                .attr('fill', EVENT_COLORS[ei])
+                .attr('opacity', 0.5)
+                .style('cursor', 'pointer')
+                .on('mouseenter', function(event, d) {
+                    d3.select(this).attr('r', 6).attr('opacity', 1);
+                    showTip(`<b>${d.eventName}</b><br>${d.dist.toFixed(1)} km<br>${d.pgv.toFixed(2)} mm/s`, event);
+                })
+                .on('mousemove', (event, d) =>
+                    showTip(`<b>${d.eventName}</b><br>${d.dist.toFixed(1)} km<br>${d.pgv.toFixed(2)} mm/s`, event))
+                .on('mouseleave', function(event) {
+                    d3.select(this).attr('r', 3.5).attr('opacity', 0.5);
+                    hideTip(event);
+                })
+                .transition().delay(ei * 300).duration(500).attr('r', 3);
+        });
+
+        showLegend(activeChartEl, DATA.groningenEvents.map((ev, i) => ({
+            color: EVENT_COLORS[i], label: ev.name
+        })));
+    }
+
+    // drie-bevingen → boxplots: dots fly into distance bins
+    function fwdThreeToBox(g) {
+        // 1. Fade out scatter axes
+        g.select('.axes-layer')
+            .transition().duration(400).attr('opacity', 0)
+            .on('end', function() { d3.select(this).remove(); });
+
+        // 2. Animate dots to jittered bin positions
+        g.select('.dots-layer').selectAll('.scatter-dot')
+            .transition()
+            .delay((d, i) => 150 + Math.min(i * 2, 300))
+            .duration(800)
+            .ease(d3.easeCubicInOut)
+            .attr('cx', d => {
+                const bx = boxX(BIN_LABELS[d.bin]);
+                const bw = boxX.bandwidth();
+                const hash = ((d.dist * 1000 + d.pgv * 100) % 1);
+                return bx + bw * 0.15 + hash * bw * 0.7;
+            })
+            .attr('cy', d => sharedY(Math.max(d.pgv, 0.01)))
+            .attr('r', 2)
+            .attr('fill', COLORS.nl)
+            .attr('opacity', 0.2);
+
+        // 3. Draw box axes + geometry after dots settle
+        setTimeout(() => {
+            const axesG = g.append('g').attr('class', 'axes-layer').attr('opacity', 0);
+            axesG.append('g')
+                .attr('transform', `translate(0,${iH})`)
+                .call(d3.axisBottom(boxX))
+                .call(styleAxis);
+            drawBoxYAxis(axesG, sharedY);
+            axisLabel(axesG, 'Afstand (km)', 'PGV (mm/s)');
+            axesG.transition().duration(400).attr('opacity', 1);
+
+            // Box column geometry
+            drawBoxColumn(g, DATA.boxPlots.countries.Netherlands.bins,
+                DATA.boxPlots.bins, boxX, sharedY, COLORS.nl, 200);
+        }, 800);
+    }
+
+    // ── Observers ───────────────────────────────────────────────────
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                activateStep(entry.target.dataset.step);
+            }
+        });
+    }, { rootMargin: '-25% 0px -45% 0px' });
+
+    steps.forEach(step => observer.observe(step));
+
+    // Pre-draw first chart when scrolly section enters
+    const sectionObs = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting) {
+            activateStep('scatter');
+            sectionObs.disconnect();
+        }
+    }, { threshold: 0.05 });
+    sectionObs.observe(document.getElementById('scrolly'));
+}
+
+// ── Tooltip helpers ─────────────────────────────────────────────────────────
+// Walk from an SVG element up to the .inline-chart container
+function chartFor(el) {
+    let node = el;
+    while (node && node !== document.body) {
+        if (node.classList && (node.classList.contains('inline-chart') || node.classList.contains('scrolly-chart'))) return node;
+        node = node.parentNode;
+    }
+    return activeChartEl;
+}
+
+function showTip(html, event) {
+    const chart = chartFor(event.target);
+    const tip = chart && chart.querySelector('.tooltip');
+    if (!tip) return;
+    tip.innerHTML = html;
+    tip.style.opacity = 1;
+    const rect = chart.getBoundingClientRect();
+    const x = event.clientX - rect.left + 12;
+    const y = event.clientY - rect.top - 10;
+    tip.style.left = (x + tip.offsetWidth > rect.width ? x - tip.offsetWidth - 24 : x) + 'px';
+    tip.style.top = y + 'px';
+}
+
+function hideTip(event) {
+    const chart = event ? chartFor(event.target) : activeChartEl;
+    if (!chart) return;
+    const tip = chart.querySelector('.tooltip');
+    if (tip) tip.style.opacity = 0;
+}
+
+// ── Inline waveforms (acceleration + velocity) ──────────────────────────────
+function drawInlineWaveforms(w) {
+    const W = 800, H = 360;
+    const m = { top: 30, right: 25, bottom: 45, left: 55 };
+    const cw = W - m.left - m.right;
+    const ch = H - m.top - m.bottom;
+
+    function drawOne(containerId, data, peak, unit, color, peakLabel, yLabel) {
+        const container = document.getElementById(containerId);
+        const tipEl = container.querySelector('.tooltip');
+
+        const svgEl = d3.select(container).select('svg')
+            .attr('viewBox', `0 0 ${W} ${H}`);
+
+        const g = svgEl.append('g').attr('transform', `translate(${m.left},${m.top})`);
+
+        const x = d3.scaleLinear().domain(d3.extent(w.times)).range([0, cw]);
+        const yAbs = d3.max(data, d => Math.abs(d)) * 1.15;
+        const y = d3.scaleLinear().domain([-yAbs, yAbs]).range([ch, 0]);
+
+        // Grid
+        g.selectAll('.grid').data(y.ticks(4)).join('line')
+            .attr('x1', 0).attr('x2', cw)
+            .attr('y1', d => y(d)).attr('y2', d => y(d))
+            .attr('stroke', '#E3E0DB');
+
+        // Zero line
+        g.append('line').attr('x1', 0).attr('x2', cw)
+            .attr('y1', y(0)).attr('y2', y(0))
+            .attr('stroke', '#D0CDC7');
+
+        // Waveform path
+        const path = g.append('path')
+            .datum(data)
+            .attr('fill', 'none')
+            .attr('stroke', color)
+            .attr('stroke-width', 2)
+            .attr('d', d3.line().x((d, i) => x(w.times[i])).y(d => y(d)));
+
+        // Peak annotation (hidden initially)
+        const px = x(peak.time);
+        const py = y(peak.signed_value);
+
+        const ann = g.append('g').attr('opacity', 0);
+        ann.append('line')
+            .attr('x1', px).attr('x2', px).attr('y1', 0).attr('y2', ch)
+            .attr('stroke', color).attr('stroke-dasharray', '5,3').attr('opacity', 0.4);
+        ann.append('line')
+            .attr('x1', 0).attr('x2', px).attr('y1', py).attr('y2', py)
+            .attr('stroke', color).attr('stroke-dasharray', '5,3').attr('opacity', 0.3);
+        ann.append('circle')
+            .attr('cx', px).attr('cy', py).attr('r', 7)
+            .attr('fill', color).attr('stroke', '#fff').attr('stroke-width', 2.5);
+        ann.append('text')
+            .attr('x', px + 12).attr('y', py - 10)
+            .attr('font-size', '13px').attr('font-weight', '700').attr('fill', color)
+            .attr('font-family', 'var(--font)')
+            .text(peakLabel);
+
+        // Axes
+        g.append('g').attr('transform', `translate(0,${ch})`)
+            .call(d3.axisBottom(x).ticks(6).tickFormat(d => d + ' s'))
+            .call(styleAxis);
+        g.append('g')
+            .call(d3.axisLeft(y).ticks(5))
+            .call(styleAxis);
+
+        // Axis labels
+        g.append('text')
+            .attr('x', cw / 2).attr('y', ch + 38)
+            .attr('text-anchor', 'middle')
+            .attr('font-size', '12px').attr('fill', '#5A5A5A')
+            .attr('font-family', 'var(--font)')
+            .text('Tijd na oorsprong (s)');
+        g.append('text')
+            .attr('transform', 'rotate(-90)')
+            .attr('x', -ch / 2).attr('y', -40)
+            .attr('text-anchor', 'middle')
+            .attr('font-size', '12px').attr('fill', '#5A5A5A')
+            .attr('font-family', 'var(--font)')
+            .text(yLabel);
+
+        // Mouseover crosshair
+        const hoverLine = g.append('line')
+            .attr('y1', 0).attr('y2', ch)
+            .attr('stroke', '#999').attr('stroke-dasharray', '3,3').attr('opacity', 0);
+        const hoverDot = g.append('circle')
+            .attr('r', 4).attr('fill', color).attr('stroke', '#fff').attr('stroke-width', 1.5).attr('opacity', 0);
+
+        g.append('rect')
+            .attr('width', cw).attr('height', ch).attr('fill', 'none').attr('pointer-events', 'all')
+            .on('mousemove', function(event) {
+                const [mx] = d3.pointer(event);
+                const t = x.invert(mx);
+                let ci = d3.bisector(d => d).left(w.times, t);
+                ci = Math.max(0, Math.min(ci, data.length - 1));
+                const val = data[ci];
+                hoverLine.attr('x1', x(w.times[ci])).attr('x2', x(w.times[ci])).attr('opacity', 0.5);
+                hoverDot.attr('cx', x(w.times[ci])).attr('cy', y(val)).attr('opacity', 1);
+                tipEl.innerHTML = `<b>${w.times[ci].toFixed(2)} s</b><br>${val.toFixed(2)} ${unit}`;
+                tipEl.style.opacity = 1;
+                const rect = container.getBoundingClientRect();
+                const tx = event.clientX - rect.left + 12;
+                const ty = event.clientY - rect.top - 10;
+                tipEl.style.left = (tx + tipEl.offsetWidth > rect.width ? tx - tipEl.offsetWidth - 24 : tx) + 'px';
+                tipEl.style.top = ty + 'px';
+            })
+            .on('mouseleave', () => {
+                hoverLine.attr('opacity', 0);
+                hoverDot.attr('opacity', 0);
+                tipEl.style.opacity = 0;
+            });
+
+        // Trigger draw animation once on scroll into view
+        // (visibility toggling handled by revealObserver)
+        const len = path.node().getTotalLength();
+        path.attr('stroke-dasharray', len).attr('stroke-dashoffset', len);
+
+        const obs = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting) {
+                setTimeout(() => {
+                    path.transition().duration(1500).ease(d3.easeCubicOut)
+                        .attr('stroke-dashoffset', 0);
+                    ann.transition().delay(1600).duration(500).attr('opacity', 1);
+                }, 300);
+                obs.disconnect();
+            }
+        }, { threshold: 0.15 });
+        obs.observe(container);
+    }
+
+    drawOne('inline-acc', w.acceleration, w.pga, w.acc_unit, COLORS.acc,
+            `PGA = ${w.pga.value.toFixed(1)} ${w.acc_unit}`,
+            `Grondversnelling (${w.acc_unit})`);
+    drawOne('inline-vel', w.velocity, w.pgv, w.unit, COLORS.vel,
+            `PGV = ${w.pgv.value.toFixed(1)} ${w.unit}`,
+            'Grondsnelheid (mm/s)');
+}
+
+// ── Mini waveforms (real KNMI data, columns = distance bins) ────────────────
+const BIN_LABELS = ['0–5', '5–10', '10–20', '20–30', '30–50'];
+
+// Peak-preserving downsample: keep max |value| per bucket
+function downsamplePeaks(values, times, target) {
+    const n = values.length;
+    const bucketSize = Math.floor(n / target);
+    const rv = [], rt = [];
+    for (let i = 0; i < target; i++) {
+        const start = i * bucketSize;
+        const end = Math.min(start + bucketSize, n);
+        let maxIdx = start;
+        for (let j = start + 1; j < end; j++) {
+            if (Math.abs(values[j]) > Math.abs(values[maxIdx])) maxIdx = j;
+        }
+        rv.push(values[maxIdx]);
+        rt.push(times[maxIdx]);
+    }
+    return { values: rv, times: rt };
+}
+
+function showManyWaveforms(g) {
+    const stations = [...DATA.miniWaveforms].sort((a, b) => a.distance_km - b.distance_km);
+    const cols = 5, rows = 4;
+    const headerH = 22;
+    const cellW = iW / cols;
+    const cellH = (iH - headerH) / rows;
+    const pad = 4;
+    const cw = cellW - pad * 2;
+    const ch = cellH - pad * 2;
+
+    // Shared y-axis across all sparklines
+    const globalMaxAbs = d3.max(stations, st =>
+        d3.max(st.velocity, d => Math.abs(d))) || 1;
+
+    // Group by bin
+    const binned = [[], [], [], [], []];
+    stations.forEach(st => binned[st.bin_index].push(st));
+
+    // ── Hero: G140 full waveform → sparkline cell ──────────────────────
+    const g140 = stations.find(s => s.station_id === 'G140');
+    const g140Col = g140 ? g140.bin_index : 0;
+    const g140Row = g140 ? binned[g140Col].indexOf(g140) : 1;
+    const g140cx = g140Col * cellW + pad;
+    const g140cy = headerH + g140Row * cellH + pad;
+
+    // Downsample full waveform (2334 pts → 200 pts) — smooth sparkline
+    const N_HERO = 200;
+    const hero = downsamplePeaks(DATA.waveform.velocity, DATA.waveform.times, N_HERO);
+
+    // Big scales: hero fills chart, own y-range for impact
+    const heroPeak = d3.max(hero.values, d => Math.abs(d)) * 1.15;
+    const bigPad = 10;
+    const bigSx = d3.scaleLinear().domain(d3.extent(hero.times)).range([bigPad, iW - bigPad]);
+    const bigSy = d3.scaleLinear().domain([-heroPeak, heroPeak])
+        .range([iH - bigPad, headerH + bigPad]);
+
+    // Small scales: fit in G140's grid cell, shared y-axis
+    const smallSx = d3.scaleLinear().domain(d3.extent(hero.times))
+        .range([g140cx + 4, g140cx + cw - 4]);
+    const smallSy = d3.scaleLinear().domain([-globalMaxAbs, globalMaxAbs])
+        .range([g140cy + ch * 0.82, g140cy + ch * 0.18]);
+
+    const bigLine = d3.line().x((d, i) => bigSx(hero.times[i])).y(d => bigSy(d));
+    const smallLine = d3.line().x((d, i) => smallSx(hero.times[i])).y(d => smallSy(d));
+
+    // Cell background (behind hero path, fades in during shrink)
+    const cellBg = g.append('rect')
+        .attr('x', g140cx).attr('y', g140cy)
+        .attr('width', cw).attr('height', ch)
+        .attr('rx', 4)
+        .attr('fill', '#fff')
+        .attr('stroke', '#E3E0DB')
+        .attr('opacity', 0);
+    cellBg.transition().delay(600).duration(400).attr('opacity', 1);
+
+    // Hero waveform at full chart size
+    const heroPath = g.append('path')
+        .datum(hero.values)
+        .attr('fill', 'none')
+        .attr('stroke', COLORS.vel)
+        .attr('stroke-width', 2)
+        .attr('d', bigLine);
+
+    // Shrink to cell position
+    heroPath.transition()
+        .delay(400)
+        .duration(900)
+        .ease(d3.easeCubicInOut)
+        .attr('d', smallLine)
+        .attr('stroke-width', 1.3);
+
+    // G140 labels appear after shrink
+    const labelDelay = 1300;
+    g.append('text')
+        .attr('x', g140cx + 6).attr('y', g140cy + 13)
+        .attr('font-size', '8px').attr('font-weight', '600').attr('fill', COLORS.muted)
+        .attr('opacity', 0)
+        .text(`G140 · ${g140 ? g140.distance_km.toFixed(1) : '1.2'} km`)
+        .transition().delay(labelDelay).duration(300).attr('opacity', 1);
+    g.append('text')
+        .attr('x', g140cx + cw - 4).attr('y', g140cy + ch - 4)
+        .attr('text-anchor', 'end')
+        .attr('font-size', '9px').attr('font-weight', '700').attr('fill', COLORS.vel)
+        .attr('opacity', 0)
+        .text(`${g140 ? g140.pgv_mms.toFixed(1) : '9.9'} mm/s`)
+        .transition().delay(labelDelay).duration(300).attr('opacity', 1);
+
+    // G140 hover (on the background rect)
+    cellBg.on('mouseenter', function(event) {
+        d3.select(this).attr('stroke', COLORS.vel).attr('stroke-width', 1.5);
+        showTip(`<b>G140</b><br>${g140 ? g140.distance_km.toFixed(1) : '1.2'} km<br>PGV: ${g140 ? g140.pgv_mms.toFixed(2) : '9.88'} mm/s`, event);
+    })
+    .on('mousemove', event => showTip(`<b>G140</b><br>${g140 ? g140.distance_km.toFixed(1) : '1.2'} km<br>PGV: ${g140 ? g140.pgv_mms.toFixed(2) : '9.88'} mm/s`, event))
+    .on('mouseleave', function(event) {
+        d3.select(this).attr('stroke', '#E3E0DB').attr('stroke-width', 1);
+        hideTip(event);
+    }).style('cursor', 'pointer');
+
+    // ── Column headers + other cells ───────────────────────────────────
+    const otherDelay = 1000;
+
+    const BIN_LABELS_KM = ['0–5 km', '5–10 km', '10–20 km', '20–30 km', '30–50 km'];
+    BIN_LABELS_KM.forEach((label, ci) => {
+        g.append('text')
+            .attr('x', ci * cellW + cellW / 2)
+            .attr('y', 14)
+            .attr('text-anchor', 'middle')
+            .attr('font-size', '10px')
+            .attr('font-weight', '700')
+            .attr('fill', COLORS.muted)
+            .attr('opacity', 0)
+            .text(label)
+            .transition().delay(otherDelay).duration(400).attr('opacity', 1);
+    });
+
+    let dotIndex = 0;
+    binned.forEach((binStations, col) => {
+        binStations.forEach((st, row) => {
+            if (st.station_id === 'G140') { dotIndex++; return; }
+            const idx = dotIndex++;
+            const cx = col * cellW + pad;
+            const cy = headerH + row * cellH + pad;
+            const w = cellW - pad * 2;
+            const h = cellH - pad * 2;
+
+            const cell = g.append('g')
+                .attr('class', 'mini-cell')
+                .attr('transform', `translate(${cx},${cy})`)
+                .attr('opacity', 0);
+
+            // Background
+            const bg = cell.append('rect')
+                .attr('width', w).attr('height', h)
+                .attr('rx', 4)
+                .attr('fill', '#fff')
+                .attr('stroke', '#E3E0DB');
+
+            // Hover
+            cell.on('mouseenter', function(event) {
+                bg.attr('stroke', COLORS.vel).attr('stroke-width', 1.5);
+                showTip(`<b>${st.station_id}</b><br>${st.distance_km.toFixed(1)} km<br>PGV: ${st.pgv_mms.toFixed(2)} mm/s`, event);
+            })
+            .on('mousemove', event => showTip(`<b>${st.station_id}</b><br>${st.distance_km.toFixed(1)} km<br>PGV: ${st.pgv_mms.toFixed(2)} mm/s`, event))
+            .on('mouseleave', (event) => { bg.attr('stroke', '#E3E0DB').attr('stroke-width', 1); hideTip(event); })
+            .style('cursor', 'pointer');
+
+            // Waveform — shared y-scale
+            const vel = st.velocity;
+            const times = st.times;
+            const sx = d3.scaleLinear().domain(d3.extent(times)).range([4, w - 4]);
+            const sy = d3.scaleLinear().domain([-globalMaxAbs, globalMaxAbs]).range([h * 0.82, h * 0.18]);
+
+            const wavePath = cell.append('path')
+                .datum(vel)
+                .attr('fill', 'none')
+                .attr('stroke', COLORS.vel)
+                .attr('stroke-width', 1.3)
+                .attr('d', d3.line().x((d, j) => sx(times[j])).y(d => sy(d)));
+
+            // Draw animation
+            const pathLen = wavePath.node().getTotalLength();
+            wavePath
+                .attr('stroke-dasharray', pathLen)
+                .attr('stroke-dashoffset', pathLen)
+                .transition()
+                .delay(otherDelay + idx * 50 + 200)
+                .duration(800)
+                .ease(d3.easeCubicOut)
+                .attr('stroke-dashoffset', 0);
+
+            // Labels
+            cell.append('text')
+                .attr('x', 6).attr('y', 13)
+                .attr('font-size', '8px').attr('font-weight', '600').attr('fill', COLORS.muted)
+                .text(`${st.station_id} · ${st.distance_km.toFixed(1)} km`);
+            cell.append('text')
+                .attr('x', w - 4).attr('y', h - 4)
+                .attr('text-anchor', 'end')
+                .attr('font-size', '9px').attr('font-weight', '700').attr('fill', COLORS.vel)
+                .text(`${st.pgv_mms.toFixed(1)} mm/s`);
+
+            // Staggered fade-in
+            cell.transition()
+                .delay(otherDelay + idx * 50)
+                .duration(400)
+                .attr('opacity', 1);
+        });
+    });
+}
+
+// ── Scatter plot (Zeerijp only) ─────────────────────────────────────
+function showScatter(g) {
+    const stations = DATA.zeerijp.stations;
+    const { x, y } = logLogScales();
+
+    drawLogAxes(g, x, y);
+    axisLabel(g, 'Afstand tot epicentrum (km)', 'PGV (mm/s)');
+
+    const dots = g.selectAll('.dot')
+        .data(stations.map(s => ({ ...s, bin: getBinIndex(s.dist) })))
+        .join('circle')
+        .attr('class', 'scatter-dot')
+        .attr('cx', d => x(d.dist))
+        .attr('cy', d => y(d.pgv))
+        .attr('r', 0)
+        .attr('fill', COLORS.nl)
+        .attr('opacity', 0.55)
+        .style('cursor', 'pointer');
+
+    dots.transition()
+        .delay((d, i) => Math.min(i * 3, 600))
+        .duration(400)
+        .attr('r', 3.5);
+
+    dots.on('mouseenter', function(event, d) {
+            d3.select(this).attr('r', 6).attr('opacity', 1);
+            showTip(`<b>${d.station_id || ''}</b>${d.station_id ? '<br>' : ''}${d.dist.toFixed(1)} km<br>${d.pgv.toFixed(2)} mm/s`, event);
+        })
+        .on('mousemove', (event, d) => showTip(`<b>${d.station_id || ''}</b>${d.station_id ? '<br>' : ''}${d.dist.toFixed(1)} km<br>${d.pgv.toFixed(2)} mm/s`, event))
+        .on('mouseleave', function(event) { d3.select(this).attr('r', 3.5).attr('opacity', 0.55); hideTip(event); });
+}
+
+// ── Bin assignment helper ────────────────────────────────────────────────────
+const BIN_EDGES = [[0,5],[5,10],[10,20],[20,30],[30,50]];
+function getBinIndex(dist) {
+    for (let i = 0; i < BIN_EDGES.length; i++) {
+        if (dist >= BIN_EDGES[i][0] && dist < BIN_EDGES[i][1]) return i;
+    }
+    return -1;
+}
+
+// ── Three events ────────────────────────────────────────────────────────────
+function showThreeEvents(g) {
+    const events = DATA.groningenEvents;
+    const { x, y } = logLogScales();
+
+    drawLogAxes(g, x, y);
+    axisLabel(g, 'Afstand tot epicentrum (km)', 'PGV (mm/s)');
+
+    events.forEach((ev, ei) => {
+        const dots = g.selectAll(`.dot-ev-${ei}`)
+            .data(ev.stations.map(s => ({ ...s, eventIdx: ei, eventName: ev.name, bin: getBinIndex(s.dist) })))
+            .join('circle')
+            .attr('class', `scatter-dot dot-ev-${ei}`)
+            .attr('cx', d => x(d.dist))
+            .attr('cy', d => y(d.pgv))
+            .attr('r', 0)
+            .attr('fill', EVENT_COLORS[ei])
+            .attr('opacity', 0.5)
+            .style('cursor', 'pointer');
+
+        dots.transition()
+            .delay(ei * 300)
+            .duration(500)
+            .attr('r', 3);
+
+        dots.on('mouseenter', function(event, d) {
+                d3.select(this).attr('r', 6).attr('opacity', 1);
+                showTip(`<b>${d.eventName}</b><br>${d.station_id || ''} · ${d.dist.toFixed(1)} km<br>${d.pgv.toFixed(2)} mm/s`, event);
+            })
+            .on('mousemove', (event, d) => showTip(`<b>${d.eventName}</b><br>${d.station_id || ''} · ${d.dist.toFixed(1)} km<br>${d.pgv.toFixed(2)} mm/s`, event))
+            .on('mouseleave', function(event) { d3.select(this).attr('r', 3).attr('opacity', 0.5); hideTip(event); });
+    });
+
+    showLegend(activeChartEl, events.map((ev, i) => ({ color: EVENT_COLORS[i], label: ev.name })));
+}
+
+// ── Shared: Box plot log y-scale ────────────────────────────────────────────
+const BOX_Y_TICKS = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50];
+const BOX_Y_MAJOR = [0.01, 0.1, 1, 10];
+
+function boxLogY(countries) {
+    const bp = DATA.boxPlots;
+    const allVals = countries.flatMap(c =>
+        bp.countries[c].bins.filter(Boolean).flatMap(b =>
+            [b.whisker_lo, b.whisker_hi, ...b.outliers]));
+    const yMin = Math.max(0.005, d3.min(allVals) * 0.7);
+    const yMax = d3.max(allVals) * 1.3 || 50;
+    return d3.scaleLog().base(10).domain([yMin, yMax]).range([iH, 0]);
+}
+
+function drawBoxYAxis(target, y) {
+    const ticks = BOX_Y_TICKS.filter(t => t >= y.domain()[0] && t <= y.domain()[1]);
+    const yAxis = target.append('g')
+        .call(d3.axisLeft(y).tickValues(ticks).tickFormat(logTickFormat(BOX_Y_MAJOR)))
+        .call(styleAxis);
+    yAxis.selectAll('.tick text')
+        .attr('font-weight', d => BOX_Y_MAJOR.includes(d) ? '700' : '400')
+        .attr('font-size', d => BOX_Y_MAJOR.includes(d) ? '12px' : '10px');
+    yAxis.selectAll('.tick line')
+        .attr('x2', d => BOX_Y_MAJOR.includes(d) ? -8 : -5);
+
+    // Grid
+    ticks.forEach(d => {
+        target.append('line')
+            .attr('x1', 0).attr('x2', iW)
+            .attr('y1', y(d)).attr('y2', y(d))
+            .attr('stroke', BOX_Y_MAJOR.includes(d) ? '#D5D2CC' : '#ECEAE6')
+            .attr('stroke-dasharray', BOX_Y_MAJOR.includes(d) ? 'none' : '2,3');
+    });
+}
+
+// ── Box plots (Netherlands only) ─────────────────────────────────────
+function showBoxPlots(g) {
+    const bp = DATA.boxPlots;
+    const bins = bp.bins;
+    const nlData = bp.countries.Netherlands.bins;
+
+    const x = d3.scaleBand().domain(bins).range([0, iW]).padding(0.35);
+    const y = boxLogY(['Netherlands']);
+
+    // Background dots
+    const allStations = DATA.groningenEvents.flatMap(ev =>
+        ev.stations.map(s => ({ ...s, bin: getBinIndex(s.dist) })));
+
+    g.selectAll('.bg-dot')
+        .data(allStations.filter(d => d.bin >= 0))
+        .join('circle')
+        .attr('class', 'bg-dot')
+        .attr('cx', d => {
+            const bandX = x(bins[d.bin]);
+            const bandW = x.bandwidth();
+            const hash = (d.dist * 1000 + d.pgv * 100) % 1;
+            return bandX + bandW * 0.15 + hash * bandW * 0.7;
+        })
+        .attr('cy', d => y(Math.max(d.pgv, y.domain()[0])))
+        .attr('r', 2)
+        .attr('fill', COLORS.nl)
+        .attr('opacity', 0.2);
+
+    // Axes
+    g.append('g').attr('transform', `translate(0,${iH})`)
+        .call(d3.axisBottom(x)).call(styleAxis);
+    drawBoxYAxis(g, y);
+    axisLabel(g, 'Afstand (km)', 'PGV (mm/s)');
+
+    drawBoxColumn(g, nlData, bins, x, y, COLORS.nl, 0);
+}
+
+// ── International box plots ─────────────────────────────────────────────────
+function showInternational(g) {
+    const bp = DATA.boxPlots;
+    const bins = bp.bins;
+    const countries = ['Netherlands', 'Japan', 'Italy', 'California'];
+
+    const x0 = d3.scaleBand()
+        .domain(bins)
+        .range([0, iW])
+        .padding(0.15);
+    const x1 = d3.scaleBand()
+        .domain(countries)
+        .range([0, x0.bandwidth()])
+        .padding(0.08);
+
+    const y = boxLogY(countries);
+
+    // Axes
+    g.append('g').attr('transform', `translate(0,${iH})`)
+        .call(d3.axisBottom(x0))
+        .call(styleAxis);
+    drawBoxYAxis(g, y);
+    axisLabel(g, 'Afstand (km)', 'PGV (mm/s)');
+
+    countries.forEach((c, ci) => {
+        const xSub = Object.assign(
+            bin => x0(bin) + x1(c),
+            { bandwidth: () => x1.bandwidth() }
+        );
+        drawBoxColumn(g, bp.countries[c].bins, bins, xSub, y,
+                      COUNTRY_META[c].color, ci * 200);
+    });
+
+    // Legend
+    showLegend(activeChartEl, countries.map(c => ({
+        color: COUNTRY_META[c].color,
+        label: COUNTRY_META[c].label
+    })));
+}
+
+// ── Shared: Log-log scales ──────────────────────────────────────────────────
+function logLogScales() {
+    const x = d3.scaleLog().base(10)
+        .domain([0.8, 55])
+        .range([0, iW]);
+    const y = d3.scaleLog().base(10)
+        .domain([0.01, 50])
+        .range([iH, 0]);
+    return { x, y };
+}
+
+// Log tick config: major ticks at powers of 10, minor at 2 & 5
+const X_MAJOR = [1, 10];
+const X_MINOR = [2, 5, 20, 50];
+const X_TICKS = [...X_MAJOR, ...X_MINOR].sort((a, b) => a - b);
+const Y_MAJOR = [0.01, 0.1, 1, 10];
+const Y_MINOR = [0.02, 0.05, 0.2, 0.5, 2, 5, 20];
+const Y_TICKS = [...Y_MAJOR, ...Y_MINOR].sort((a, b) => a - b);
+
+function logTickFormat(major) {
+    return d => {
+        if (major.includes(d)) return d >= 1 ? d3.format('~g')(d) : d3.format('.2~g')(d);
+        return d >= 1 ? d3.format('~g')(d) : d3.format('.1~g')(d);
     };
 }
 
-// ── Event pill ───────────────────────────────────────────────────────────────
-function renderEventPill(data) {
-    const e = data.event;
-    const d = new Date(e.date).toLocaleDateString('nl-NL',
-        { day: 'numeric', month: 'long', year: 'numeric' });
-    const stationCodes = data.stations.map(s => s.station.code).join(', ');
-    document.getElementById('event-pill').innerHTML =
-        `<span><strong>${e.name}</strong></span>` +
-        `<span>${d}</span>` +
-        `<span class="mag">M${e.magnitude}</span>` +
-        `<span>Diepte: <strong>${e.depth_km} km</strong></span>` +
-        `<span>Stations: <strong>${stationCodes}</strong></span>`;
-}
+// ── Shared: Draw log-log axes (into any group) ─────────────────────────────
+function drawLogAxes(target, x, y) {
+    // X axis
+    const xAxis = target.append('g').attr('transform', `translate(0,${iH})`)
+        .call(d3.axisBottom(x).tickValues(X_TICKS).tickFormat(logTickFormat(X_MAJOR)))
+        .call(styleAxis);
+    // Bold major x ticks
+    xAxis.selectAll('.tick text')
+        .attr('font-weight', d => X_MAJOR.includes(d) ? '700' : '400')
+        .attr('font-size', d => X_MAJOR.includes(d) ? '12px' : '10px');
+    // Longer major tick lines
+    xAxis.selectAll('.tick line')
+        .attr('y2', d => X_MAJOR.includes(d) ? 8 : 5);
 
-// ── Reusable time-domain chart ───────────────────────────────────────────────
-function timeChart(containerEl, tooltipEl, series, color, peak) {
-    const container = d3.select(containerEl);
-    const tooltip   = d3.select(tooltipEl);
-    const W = containerEl.clientWidth;
-    const H = W * 0.55;
-    const iW = W - MARGIN.left - MARGIN.right;
-    const iH = H - MARGIN.top  - MARGIN.bottom;
+    // Y axis
+    const yAxis = target.append('g')
+        .call(d3.axisLeft(y).tickValues(Y_TICKS).tickFormat(logTickFormat(Y_MAJOR)))
+        .call(styleAxis);
+    yAxis.selectAll('.tick text')
+        .attr('font-weight', d => Y_MAJOR.includes(d) ? '700' : '400')
+        .attr('font-size', d => Y_MAJOR.includes(d) ? '12px' : '10px');
+    yAxis.selectAll('.tick line')
+        .attr('x2', d => Y_MAJOR.includes(d) ? -8 : -5);
 
-    const t = series.times, v = series.data;
-    const x = d3.scaleLinear().domain(d3.extent(t)).range([0, iW]);
-    const yAbs = d3.max(v, d => Math.abs(d)) * 1.15;
-    const y = d3.scaleLinear().domain([-yAbs, yAbs]).range([iH, 0]);
-
-    const svg = container.append('svg')
-        .attr('viewBox', `0 0 ${W} ${H}`);
-    const g = svg.append('g')
-        .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
-
-    // grid
-    g.selectAll('.grid').data(y.ticks(4)).join('line')
-        .attr('x1',0).attr('x2',iW)
-        .attr('y1',d=>y(d)).attr('y2',d=>y(d))
-        .attr('stroke','#E3E0DB');
-    // zero
-    g.append('line').attr('x1',0).attr('x2',iW)
-        .attr('y1',y(0)).attr('y2',y(0)).attr('stroke','#D0CDC7');
-
-    // waveform
-    g.append('path').datum(v)
-        .attr('fill','none').attr('stroke',color).attr('stroke-width',1.5)
-        .attr('d', d3.line().x((_,i)=>x(t[i])).y(d=>y(d)));
-
-    // PGV annotation
-    if (peak) {
-        const px = x(peak.time), py = y(peak.signed_value);
-        g.append('line').attr('x1',px).attr('x2',px).attr('y1',0).attr('y2',iH)
-            .attr('stroke',color).attr('stroke-dasharray','5,3').attr('opacity',0.45);
-        g.append('line').attr('x1',0).attr('x2',px).attr('y1',py).attr('y2',py)
-            .attr('stroke',color).attr('stroke-dasharray','5,3').attr('opacity',0.3);
-        g.append('circle').attr('cx',px).attr('cy',py).attr('r',6)
-            .attr('fill',color).attr('stroke','#fff').attr('stroke-width',2.5);
-        g.append('text').attr('x',px+10).attr('y',py - 8)
-            .attr('font-size','10px').attr('font-weight','700').attr('fill',color)
-            .text(`PGV ${peak.value.toFixed(1)}`);
-    }
-
-    // axes
-    g.append('g').attr('transform',`translate(0,${iH})`)
-        .call(d3.axisBottom(x).ticks(5).tickFormat(d=>d+' s'))
-        .selectAll('text').attr('font-size','10px');
-    g.append('g').call(d3.axisLeft(y).ticks(4))
-        .selectAll('text').attr('font-size','10px');
-
-    // axis labels
-    svg.append('text').attr('x',MARGIN.left+iW/2).attr('y',H-3)
-        .attr('text-anchor','middle').attr('font-size','10px').attr('fill','#7A7A7A')
-        .text('Tijd na oorsprong (s)');
-    svg.append('text').attr('transform','rotate(-90)')
-        .attr('x',-(MARGIN.top+iH/2)).attr('y',13)
-        .attr('text-anchor','middle').attr('font-size','10px').attr('fill','#7A7A7A')
-        .text(series.unit);
-
-    // hover
-    const ch = g.append('line').attr('y1',0).attr('y2',iH)
-        .attr('stroke','#B8B4AE').attr('stroke-dasharray','3,2').attr('opacity',0);
-    const hr = g.append('rect').attr('width',iW).attr('height',iH)
-        .attr('fill','none').attr('pointer-events','all');
-
-    return { svg, g, x, y, t, v, ch, hr, tooltip, iW, iH, vbW:W, unit: series.unit };
-}
-
-// ── Sync crosshairs ──────────────────────────────────────────────────────────
-function syncCrosshairs(charts) {
-    const bisect = d3.bisector(d=>d).left;
-
-    function update(chart, time) {
-        const px = chart.x(time);
-        if (px < 0 || px > chart.iW) {
-            chart.ch.attr('opacity',0); chart.tooltip.style('opacity',0); return;
-        }
-        chart.ch.attr('x1',px).attr('x2',px).attr('opacity',0.6);
-        const i = Math.max(0, Math.min(bisect(chart.t, time), chart.t.length-1));
-        const sc = (chart.svg.node().clientWidth||chart.svg.node().getBoundingClientRect().width)/chart.vbW;
-        chart.tooltip
-            .html(`<strong>t = ${chart.t[i].toFixed(2)} s</strong><br>${chart.v[i].toFixed(2)} ${chart.unit}`)
-            .style('opacity',1)
-            .style('left',((px+MARGIN.left+10)*sc)+'px')
-            .style('top',((chart.y(chart.v[i])+MARGIN.top-10)*sc)+'px');
-    }
-
-    charts.forEach(src => {
-        src.hr.on('mousemove', ev => {
-            const [mx] = d3.pointer(ev, src.g.node());
-            const time = src.x.invert(mx);
-            charts.forEach(c => update(c, time));
-        }).on('mouseleave', () => {
-            charts.forEach(c => { c.ch.attr('opacity',0); c.tooltip.style('opacity',0); });
-        });
+    // Grid: solid for major, dashed for minor
+    X_TICKS.forEach(d => {
+        target.append('line')
+            .attr('x1', x(d)).attr('x2', x(d))
+            .attr('y1', 0).attr('y2', iH)
+            .attr('stroke', X_MAJOR.includes(d) ? '#D5D2CC' : '#ECEAE6')
+            .attr('stroke-dasharray', X_MAJOR.includes(d) ? 'none' : '2,3');
     });
+    Y_TICKS.forEach(d => {
+        target.append('line')
+            .attr('x1', 0).attr('x2', iW)
+            .attr('y1', y(d)).attr('y2', y(d))
+            .attr('stroke', Y_MAJOR.includes(d) ? '#D5D2CC' : '#ECEAE6')
+            .attr('stroke-dasharray', Y_MAJOR.includes(d) ? 'none' : '2,3');
+    });
+}
+
+// ── Shared: Grid ────────────────────────────────────────────────────────────
+function drawGrid(g, y, ticks) {
+    g.selectAll('.grid').data(y.ticks(ticks)).join('line')
+        .attr('x1', 0).attr('x2', iW)
+        .attr('y1', d => y(d)).attr('y2', d => y(d))
+        .attr('stroke', '#E3E0DB');
+}
+
+// ── Shared: Draw single box-plot column ─────────────────────────────────────
+function drawBoxColumn(g, data, bins, x, y, color, delay) {
+    bins.forEach((bin, bi) => {
+        const b = data[bi];
+        if (!b) return;
+
+        const bx = x(bin);
+        const bw = x.bandwidth();
+
+        const boxG = g.append('g').attr('opacity', 0);
+
+        // Whisker
+        boxG.append('line')
+            .attr('x1', bx + bw / 2).attr('x2', bx + bw / 2)
+            .attr('y1', y(b.whisker_hi)).attr('y2', y(b.whisker_lo))
+            .attr('stroke', color).attr('stroke-width', 1.5);
+
+        // Box
+        boxG.append('rect')
+            .attr('x', bx).attr('width', bw)
+            .attr('y', y(b.q3)).attr('height', y(b.q1) - y(b.q3))
+            .attr('fill', color).attr('fill-opacity', 0.2)
+            .attr('stroke', color).attr('stroke-width', 2);
+
+        // Median
+        boxG.append('line')
+            .attr('x1', bx).attr('x2', bx + bw)
+            .attr('y1', y(b.median)).attr('y2', y(b.median))
+            .attr('stroke', color).attr('stroke-width', 3);
+
+        // Whisker caps
+        const capW = bw * 0.5;
+        [b.whisker_lo, b.whisker_hi].forEach(val => {
+            boxG.append('line')
+                .attr('x1', bx + bw / 2 - capW / 2)
+                .attr('x2', bx + bw / 2 + capW / 2)
+                .attr('y1', y(val)).attr('y2', y(val))
+                .attr('stroke', color).attr('stroke-width', 1.5);
+        });
+
+        boxG.transition()
+            .delay(delay + bi * 100)
+            .duration(400)
+            .attr('opacity', 1);
+    });
+}
+
+// ── Shared: Axis styling ────────────────────────────────────────────────────
+function styleAxis(g) {
+    g.selectAll('text')
+        .attr('font-family', 'var(--font)')
+        .attr('font-size', '11px')
+        .attr('font-weight', '500')
+        .attr('fill', '#6B6B6B');
+    g.selectAll('line, path')
+        .attr('stroke', '#C4C0BA');
+}
+
+// ── Shared: Axis labels ─────────────────────────────────────────────────────
+function axisLabel(g, xLabel, yLabel) {
+    g.append('text')
+        .attr('x', iW / 2).attr('y', iH + 40)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '12px').attr('fill', '#5A5A5A')
+        .attr('font-family', 'var(--font)')
+        .text(xLabel);
+    g.append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('x', -iH / 2).attr('y', -45)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '12px').attr('fill', '#5A5A5A')
+        .attr('font-family', 'var(--font)')
+        .text(yLabel);
+}
+
+// ── Legend ───────────────────────────────────────────────────────────────────
+function showLegend(container, items) {
+    const el = container.querySelector('.chart-legend');
+    if (!el) return;
+    el.innerHTML = items.map(it =>
+        `<span><span class="swatch" style="background:${it.color}"></span>${it.label}</span>`
+    ).join('');
 }
 </script>
 </body>
