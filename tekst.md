@@ -1,7 +1,7 @@
-# Zijn Groningse aardbevingen _echt_ anders?
+# Zijn Groningse aardbevingen anders?
 
 
-Hoe seismologen weten hoe hard de grond heeft getrild
+Hoe seismologen meten hoe hard de grond trilt
 
 
 ---
@@ -9,49 +9,38 @@ Hoe seismologen weten hoe hard de grond heeft getrild
 
 ## intro
 
+Verspreid over Groningen liggen honderden **accelerometers** in de grond — kastjes zo groot als een schoenendoos. Binnenin hangt een gewichtje aan een veer. Beweegt de grond, dan beweegt het kastje mee — maar het gewichtje blijft even achter. Dat verschil levert een elektrisch signaal op: de **grondversnelling**.
 
-Verspreid over Groningen liggen honderden **accelerometers** in de grond — kastjes zo groot als een schoenendoos. Binnenin hangt een gewichtje aan een veer. Als de grond begint te schudden, beweegt het kastje mee, maar het gewichtje blijft even achter. Dat verschil wordt gemeten als een elektrisch signaal: de zogenoemde **grondversnelling**.
-
-Hier zie je de metingen van zo'n accelerometer op 1,1 kilometer van de **aardbeving bij Zeerijp** in 8 januari 2018. 
+Hier zie je de metingen van zo'n accelerometer, op 1,1 kilometer van de **aardbeving bij Zeerijp** op 8 januari 2018.
 
 
 ## versnelling-snelheid
 
-
-Maar versnelling alleen vertelt niet hoe hard de grond beweegt — alleen hoe snel de beweging *verandert*. Als je de versnellingen optelt, dan is het resultaat: de **grondsnelheid** – hoe snel de grond heen en weer beweegt, in millimeters per seconde.
+Maar versnelling alleen vertelt niet hoe hard de grond beweegt — alleen hoe snel de beweging *verandert*. Denk aan een auto: versnelling is de kracht die je in je stoel drukt als je optrekt. Snelheid is wat de teller aangeeft — hoe hard je daadwerkelijk rijdt. Weet je hoe hard je optrok en hoe lang, dan weet je hoe snel je rijdt. Precies zo berekenen seismologen uit de versnelling de **grondsnelheid**: hoe snel de grond heen en weer beweegt, in millimeters per seconde.
 
 
 ## pgv-uitleg
 
+Het hoogste punt van die snelheid heet de **piekgrondsnelheid** — afgekort PGV. Hoe hoger de PGV, hoe groter de kans op schade.
 
-Het hoogste punt van die snelheid heet de **piekgrondsnelheid** — afgekort PGV. Het maximum aan millimeters dat de grond bewoong in één seconde. Hoe hoger de PGV, hoe groter de kans op schade.
-
-
-Maar één station vertelt niet het volledige verhaal van een aardbeving. Het KNMI-netwerk heeft honderden sensoren verspreid over Groningen. Elke grafiek hieronder is een **grondsnelheidssignaal** van een ander station. Dichtbij het epicentrum slaat de naald wild uit; verder weg is het sterk gedempt. 
+Maar één station vertelt niet het hele verhaal. Het KNMI heeft honderden sensoren verspreid over Groningen. Elk van de grafieken hieronder is het **grondsnelheidssignaal** van een ander station. Dichtbij het epicentrum slaat de naald wild uit; verder weg dempt het signaal snel.
 
 
 ## scatter
 
-
-Als we van elke meting alleen de PGV bewaren en die uitzetten tegen de afstand tot het epicentrum, krijgen we een scatterplot. Elke stip is één PGV-meting van de Zeerijp-aardbeving. Bij 1 km haalt Zeerijp bijna 20 mm/s; op 30 km is het signaal bijna verdwenen.
+Bewaren we van elke meting alleen de PGV en zetten we die uit tegen de afstand tot het epicentrum, dan krijgen we een scatterplot. Elke stip is één meting van de Zeerijp-aardbeving. Op 1 km haalt Zeerijp bijna 20 mm/s; op 30 km is het signaal vrijwel verdwenen.
 
 
 ## drie-bevingen
 
-
-Maar de Zeerijp-beving van 2018 was niet de enige met magnitude 3,4. In 2019 volgde Westerwijtwerd, in 2025 opnieuw Zeerijp. Alle drie de aardbevingen hadden **dezelfde magnitude**.
+De beving bij Zeerijp in 2018 was niet de enige met magnitude 3,4. In 2019 volgde Westerwijtwerd, in 2025 opnieuw Zeerijp. Alle drie hadden **dezelfde magnitude**.
 
 
 ## boxplots
 
-
-Om al die individuele punten samen te vatten groeperen we de metingen in afstandsbakken. Zo wordt het typische afnamepatroon zichtbaar: de PGV halveert ruwweg elke 5 kilometer.
+Om al die losse punten samen te vatten, groeperen we de metingen in afstandsbakken. Zo wordt het afnamepatroon zichtbaar: de PGV halveert ruwweg elke 5 kilometer.
 
 
 ## internationaal
 
-
-Zijn Groningse aardbevingen hierin anders? Niet echt. In het epicentrum trilt de grond door ondiepe aardbevingen in Groningen iets harder, maar de bodembewegingen doven snel uit als je verder uit het epicentrum loopt. Bij dezelfde magnitude en afstand produceert Groningen **lagere PGV's** dan Japan, Italië en Californië. 
-
-
-
+Zijn Groningse aardbevingen hierin anders? Niet echt. Vlakbij het epicentrum trilt de grond door de geringe diepte iets harder, maar die trillingen doven sneller uit. Op grotere afstand produceert Groningen bij dezelfde magnitude daardoor **lagere PGV's** dan Japan, Italië en Californië.
