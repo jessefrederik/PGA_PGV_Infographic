@@ -7,6 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -233,6 +235,37 @@
             vertical-align: middle;
         }
 
+        /* ── Map ────────────────────────────────────────────────────────── */
+        #scrolly-map {
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        #scrolly-map.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #scrolly-map .leaflet-control-attribution { font-size: 9px; }
+        .map-epicenter-label {
+            font-family: var(--font);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--color-dc-accent);
+            white-space: nowrap;
+            text-shadow: 1px 1px 3px #fff, -1px -1px 3px #fff, 0 0 6px #fff;
+        }
+        .map-station-label {
+            font-family: var(--font);
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--color-text);
+            white-space: nowrap;
+            text-shadow: 1px 1px 2px #fff, -1px -1px 2px #fff, 0 0 4px #fff;
+        }
+
         /* ── Footer ──────────────────────────────────────────────────────── */
         footer {
             text-align: center;
@@ -305,17 +338,19 @@
     <div class="tooltip"></div>
 </div>
 
-<div class="article-prose reveal" id="prose-versnelling-snelheid"></div>
-
-<div class="inline-chart reveal" id="inline-vel">
-    <svg></svg>
-    <div class="tooltip"></div>
-</div>
-
 <section class="scrolly" id="scrolly">
     <div class="scrolly-steps">
+        <div class="step" data-step="vel-waveform">
+            <div class="step-text" id="prose-versnelling-snelheid"></div>
+        </div>
+        <div class="step" data-step="pgv-punt">
+            <div class="step-text" id="prose-pgv-punt"></div>
+        </div>
+        <div class="step" data-step="kaart">
+            <div class="step-text" id="prose-kaart"></div>
+        </div>
         <div class="step" data-step="sparklines">
-            <div class="step-text" id="prose-pgv-uitleg"></div>
+            <div class="step-text" id="prose-meerdere-stations"></div>
         </div>
         <div class="step" data-step="scatter">
             <div class="step-text" id="prose-scatter"></div>
@@ -332,6 +367,7 @@
     </div>
     <div class="scrolly-chart" id="scrolly-chart">
         <svg></svg>
+        <div id="scrolly-map"></div>
         <div class="tooltip"></div>
         <div class="chart-legend"></div>
     </div>
@@ -417,9 +453,11 @@ let activeTip = null, activeChartEl = null;
 Promise.all([
     d3.json('data/scroll_data.json?v=2'),
     d3.json('data/mini_waveforms.json?v=2'),
-]).then(([scrollData, miniWaves]) => {
+    d3.json('data/all_stations.json?v=2'),
+]).then(([scrollData, miniWaves, allStations]) => {
     DATA = scrollData;
     DATA.miniWaveforms = miniWaves;
+    DATA.allStations = allStations;
     drawInlineWaveforms(scrollData.waveform);
     initAllCharts();
     initScrolly();
@@ -471,7 +509,7 @@ function initScrolly() {
     const steps = document.querySelectorAll('.scrolly .step');
     let currentStep = null;
 
-    const STEPS = ['sparklines', 'scatter', 'drie-bevingen', 'boxplots', 'internationaal'];
+    const STEPS = ['vel-waveform', 'pgv-punt', 'kaart', 'sparklines', 'scatter', 'drie-bevingen', 'boxplots', 'internationaal'];
 
     // Ensure dimensions are set
     iW = VB_W - M.left - M.right;
@@ -494,6 +532,151 @@ function initScrolly() {
         iH = VB_H - M.top - M.bottom;
     }
 
+    // ── Leaflet map ──────────────────────────────────────────────────
+    const mapEl = document.getElementById('scrolly-map');
+    let leafletMap = null;
+    let mapMarkers = [];       // dynamic markers (cleared on re-show)
+    let mapSelectedMarkers = []; // the 20 highlighted markers
+
+    function initMap() {
+        if (leafletMap) return;
+        leafletMap = L.map(mapEl, {
+            zoomControl: false,
+            attributionControl: true,
+            dragging: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            touchZoom: false,
+        }).setView([53.28, 6.72], 10);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19,
+        }).addTo(leafletMap);
+
+        // Epicenter marker (concentric circles + crosshair)
+        const epicenter = [53.3633, 6.7862];
+        const epiIcon = L.divIcon({
+            className: '',
+            html: `<svg width="48" height="48" viewBox="-24 -24 48 48">
+                <circle r="18" fill="none" stroke="${COLORS.acc}" stroke-width="1.5" opacity="0.3"/>
+                <circle r="12" fill="none" stroke="${COLORS.acc}" stroke-width="1.5" opacity="0.5"/>
+                <circle r="6" fill="none" stroke="${COLORS.acc}" stroke-width="2" opacity="0.7"/>
+                <circle r="2.5" fill="${COLORS.acc}" opacity="0.9"/>
+                <line x1="-22" x2="22" y1="0" y2="0" stroke="${COLORS.acc}" stroke-width="0.8" opacity="0.35"/>
+                <line x1="0" x2="0" y1="-22" y2="22" stroke="${COLORS.acc}" stroke-width="0.8" opacity="0.35"/>
+            </svg>`,
+            iconSize: [48, 48],
+            iconAnchor: [24, 24],
+        });
+        L.marker(epicenter, { icon: epiIcon, interactive: false, zIndexOffset: 1000 }).addTo(leafletMap);
+        L.marker(epicenter, {
+            icon: L.divIcon({
+                className: 'map-epicenter-label',
+                html: 'Epicentrum Zeerijp',
+                iconAnchor: [-28, 5],
+            }),
+            interactive: false,
+            zIndexOffset: 1000,
+        }).addTo(leafletMap);
+    }
+
+    function showMap(animate) {
+        mapEl.classList.add('active');
+        svgEl.style('opacity', 0).style('pointer-events', 'none');
+        svgEl.selectAll('.scrolly-group').remove();
+
+        initMap();
+        leafletMap.invalidateSize();
+
+        // Clear dynamic markers
+        mapMarkers.forEach(m => leafletMap.removeLayer(m));
+        mapMarkers = [];
+        mapSelectedMarkers = [];
+
+        const selectedIds = new Set(DATA.miniWaveforms.map(s => s.station_id));
+        const baseDelay = animate ? 100 : 0;
+
+        // 1. All stations as small dark dots (using divIcon for reliable rendering)
+        const dotIcon = L.divIcon({
+            className: '',
+            html: '<div style="width:8px;height:8px;border-radius:50%;background:#2D2D2D;opacity:0.6;border:1px solid #fff;"></div>',
+            iconSize: [8, 8],
+            iconAnchor: [4, 4],
+        });
+
+        setTimeout(() => {
+            (DATA.allStations || []).forEach(st => {
+                if (selectedIds.has(st.id)) return;
+                const m = L.marker([st.lat, st.lon], {
+                    icon: dotIcon,
+                    interactive: true,
+                }).addTo(leafletMap);
+                m.bindTooltip(`<b>${st.id}</b>`, { direction: 'top', offset: [0, -6] });
+                mapMarkers.push(m);
+            });
+
+            // 2. The 20 selected stations: larger, colored, staggered after black dots
+            const selected = [...DATA.miniWaveforms].sort((a, b) => a.distance_km - b.distance_km);
+            selected.forEach((st, i) => {
+                if (!st.lat || !st.lon) return;
+                const delay = animate ? i * 60 + 300 : 0;
+                setTimeout(() => {
+                    const selIcon = L.divIcon({
+                        className: '',
+                        html: `<div style="width:16px;height:16px;border-radius:50%;background:${COLORS.vel};opacity:0.9;border:2.5px solid #fff;box-shadow:0 0 4px rgba(0,0,0,0.3);"></div>`,
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8],
+                    });
+                    const m = L.marker([st.lat, st.lon], {
+                        icon: selIcon,
+                        zIndexOffset: 500,
+                    }).addTo(leafletMap);
+                    m.bindTooltip(
+                        `<b>${st.station_id}</b><br>${st.distance_km.toFixed(1)} km · ${st.pgv_mms.toFixed(1)} mm/s`,
+                        { direction: 'top', offset: [0, -10] }
+                    );
+                    m._stationData = st;
+                    mapMarkers.push(m);
+                    mapSelectedMarkers.push(m);
+                }, delay);
+            });
+        }, baseDelay);
+
+        setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 550);
+    }
+
+    function hideMap() {
+        mapEl.classList.remove('active');
+        svgEl.style('opacity', null).style('pointer-events', null);
+    }
+
+    // ── Map → Sparklines transition ──────────────────────────────────
+    function fwdMapToSparklines() {
+        // Fade out map, then draw sparklines with waveform draw animation
+        hideMap();
+
+        const g = svgEl.append('g')
+            .attr('class', 'scrolly-group')
+            .attr('transform', `translate(${M.left},${M.top})`)
+            .attr('opacity', 0);
+
+        const stations = [...DATA.miniWaveforms].sort((a, b) => a.distance_km - b.distance_km);
+        const cols = 5, rows = 4, headerH = 22;
+        const cellW = iW / cols, cellH = (iH - headerH) / rows;
+        const pad = 4, cw = cellW - pad * 2, ch = cellH - pad * 2;
+        const globalMaxAbs = d3.max(stations, st =>
+            d3.max(st.velocity, d => Math.abs(d))) || 1;
+        const binned = [[], [], [], [], []];
+        stations.forEach(st => binned[st.bin_index].push(st));
+
+        buildSparklineCells(g, stations, binned, cols, rows, headerH,
+            cellW, cellH, pad, cw, ch, globalMaxAbs, 'reveal');
+
+        g.transition().delay(300).duration(500).attr('opacity', 1);
+    }
+
     function activateStep(stepName) {
         if (stepName === currentStep) return;
         const fromIdx = currentStep ? stepIdx(currentStep) : -1;
@@ -505,10 +688,23 @@ function initScrolly() {
         const legend = chartContainer.querySelector('.chart-legend');
         if (legend) legend.innerHTML = '';
 
+        // Map visibility
+        if (stepName === 'kaart') {
+            showMap(fromIdx >= 0 && toIdx === fromIdx + 1);
+            steps.forEach(s => s.classList.remove('active'));
+            document.querySelector(`.step[data-step="${stepName}"]`)?.classList.add('active');
+            return;
+        }
+
+        // Defer hideMap for kaart→sparklines so fwdMapToSparklines can read marker positions
+        const comingFromMap = prevStep === 'kaart';
+        if (!comingFromMap) hideMap();
+
         // Forward single-step → animated transition
         if (fromIdx >= 0 && toIdx === fromIdx + 1) {
             forwardTransition(prevStep, stepName);
         } else {
+            if (comingFromMap) hideMap();
             crossfadeRedraw(stepName);
         }
 
@@ -533,6 +729,8 @@ function initScrolly() {
 
     function drawFullState(stepName, g) {
         switch (stepName) {
+            case 'vel-waveform':   drawVelWaveform(g, false); break;
+            case 'pgv-punt':       drawVelWaveform(g, true); break;
             case 'sparklines':     drawSparklinesFull(g); break;
             case 'scatter':        drawScatterFull(g, false); break;
             case 'drie-bevingen':  drawScatterFull(g, true); break;
@@ -541,24 +739,181 @@ function initScrolly() {
         }
     }
 
+    // ── Velocity waveform state ─────────────────────────────────────
+    function drawVelWaveform(g, withAnnotation) {
+        const w = DATA.waveform;
+        const data = w.velocity;
+        const x = d3.scaleLinear().domain(d3.extent(w.times)).range([0, iW]);
+        const yAbs = d3.max(data, d => Math.abs(d)) * 1.15;
+        const y = d3.scaleLinear().domain([-yAbs, yAbs]).range([iH, 0]);
+
+        // Axes + grid (all non-waveform visuals)
+        const axesG = g.append('g').attr('class', 'axes-layer');
+        axesG.selectAll('.grid-line').data(y.ticks(4)).join('line')
+            .attr('x1', 0).attr('x2', iW)
+            .attr('y1', d => y(d)).attr('y2', d => y(d))
+            .attr('stroke', '#E3E0DB');
+        axesG.append('line').attr('x1', 0).attr('x2', iW)
+            .attr('y1', y(0)).attr('y2', y(0)).attr('stroke', '#D0CDC7');
+        axesG.append('g').attr('transform', `translate(0,${iH})`)
+            .call(d3.axisBottom(x).ticks(6).tickFormat(d => d + ' s'))
+            .call(styleAxis);
+        axesG.append('g').call(d3.axisLeft(y).ticks(5)).call(styleAxis);
+        axisLabel(axesG, 'Tijd na oorsprong (s)', 'Grondsnelheid (mm/s)');
+
+        // Waveform
+        const waveG = g.append('g').attr('class', 'vel-wave-layer');
+        const path = waveG.append('path').datum(data)
+            .attr('fill', 'none').attr('stroke', COLORS.vel).attr('stroke-width', 2)
+            .attr('d', d3.line().x((d, i) => x(w.times[i])).y(d => y(d)));
+
+        // Draw animation
+        const len = path.node().getTotalLength();
+        path.attr('stroke-dasharray', len).attr('stroke-dashoffset', len)
+            .transition().duration(1500).ease(d3.easeCubicOut)
+            .attr('stroke-dashoffset', 0);
+
+        // Store scales for PGV annotation
+        g.datum({ velX: x, velY: y });
+
+        if (withAnnotation) {
+            addPGVAnnotation(g, x, y, 1600);
+        }
+    }
+
+    function addPGVAnnotation(g, x, y, delay) {
+        const w = DATA.waveform;
+        const px = x(w.pgv.time);
+        const py = y(w.pgv.signed_value);
+
+        const ann = g.append('g').attr('class', 'pgv-annotation').attr('opacity', 0);
+        ann.append('line')
+            .attr('x1', px).attr('x2', px).attr('y1', 0).attr('y2', iH)
+            .attr('stroke', COLORS.vel).attr('stroke-dasharray', '5,3').attr('opacity', 0.4);
+        ann.append('line')
+            .attr('x1', 0).attr('x2', px).attr('y1', py).attr('y2', py)
+            .attr('stroke', COLORS.vel).attr('stroke-dasharray', '5,3').attr('opacity', 0.3);
+        ann.append('circle')
+            .attr('cx', px).attr('cy', py).attr('r', 7)
+            .attr('fill', COLORS.vel).attr('stroke', '#fff').attr('stroke-width', 2.5);
+        ann.append('text')
+            .attr('x', px + 12).attr('y', py - 10)
+            .attr('font-size', '14px').attr('font-weight', '700').attr('fill', COLORS.vel)
+            .attr('font-family', 'var(--font)')
+            .text('PGV = 10 mm/s');
+
+        ann.transition().delay(delay || 0).duration(500).attr('opacity', 1);
+    }
+
+    // vel-waveform → pgv-punt: add PGV annotation
+    function fwdVelToPGV(g) {
+        const d = g.datum();
+        if (d && d.velX && d.velY) {
+            addPGVAnnotation(g, d.velX, d.velY, 0);
+        } else {
+            // Fallback: recompute scales
+            const w = DATA.waveform;
+            const x = d3.scaleLinear().domain(d3.extent(w.times)).range([0, iW]);
+            const yAbs = d3.max(w.velocity, d => Math.abs(d)) * 1.15;
+            const y = d3.scaleLinear().domain([-yAbs, yAbs]).range([iH, 0]);
+            addPGVAnnotation(g, x, y, 0);
+        }
+    }
+
+    // pgv-punt → sparklines: waveform shrinks to G140 cell, others draw in
+    function fwdPGVToSparklines(g) {
+        const stations = [...DATA.miniWaveforms].sort((a, b) => a.distance_km - b.distance_km);
+        const cols = 5, rows = 4, headerH = 22;
+        const cellW = iW / cols, cellH = (iH - headerH) / rows;
+        const pad = 4, cw = cellW - pad * 2, ch = cellH - pad * 2;
+        const globalMaxAbs = d3.max(stations, st =>
+            d3.max(st.velocity, d => Math.abs(d))) || 1;
+        const binned = [[], [], [], [], []];
+        stations.forEach(st => binned[st.bin_index].push(st));
+
+        // G140 grid position
+        const g140 = stations.find(s => s.station_id === 'G140');
+        const g140Col = g140 ? g140.bin_index : 0;
+        const g140Row = g140 ? binned[g140Col].indexOf(g140) : 1;
+        const g140cx = g140Col * cellW + pad;
+        const g140cy = headerH + g140Row * cellH + pad;
+
+        // Downsample full waveform to 200 pts for path morphing
+        const hero = downsamplePeaks(DATA.waveform.velocity, DATA.waveform.times, 200);
+        const heroPeak = d3.max(hero.values, d => Math.abs(d)) * 1.15;
+        const bigSx = d3.scaleLinear().domain(d3.extent(hero.times)).range([0, iW]);
+        const bigSy = d3.scaleLinear().domain([-heroPeak, heroPeak]).range([iH, 0]);
+        const smallSx = d3.scaleLinear().domain(d3.extent(hero.times))
+            .range([g140cx + 4, g140cx + cw - 4]);
+        const smallSy = d3.scaleLinear().domain([-globalMaxAbs, globalMaxAbs])
+            .range([g140cy + ch * 0.82, g140cy + ch * 0.18]);
+        const bigLine = d3.line().x((d, i) => bigSx(hero.times[i])).y(d => bigSy(d));
+        const smallLine = d3.line().x((d, i) => smallSx(hero.times[i])).y(d => smallSy(d));
+
+        // 1. Fade out annotation + axes
+        g.select('.pgv-annotation')
+            .transition().duration(300).attr('opacity', 0)
+            .on('end', function() { d3.select(this).remove(); });
+        g.select('.axes-layer')
+            .transition().duration(400).attr('opacity', 0)
+            .on('end', function() { d3.select(this).remove(); });
+
+        // 2. Swap waveform to 200-pt version at same visual position
+        const waveLayer = g.select('.vel-wave-layer');
+        waveLayer.select('path').remove();
+        const heroPath = waveLayer.append('path')
+            .datum(hero.values)
+            .attr('fill', 'none').attr('stroke', COLORS.vel).attr('stroke-width', 2)
+            .attr('d', bigLine).attr('stroke-dasharray', 'none');
+
+        // G140 cell background appears behind
+        g.insert('rect', '.vel-wave-layer')
+            .attr('class', 'g140-bg')
+            .attr('x', g140cx).attr('y', g140cy)
+            .attr('width', cw).attr('height', ch)
+            .attr('rx', 4).attr('fill', '#fff').attr('stroke', '#E3E0DB')
+            .attr('opacity', 0)
+            .transition().delay(300).duration(400).attr('opacity', 1);
+
+        // Morph waveform into G140 cell
+        heroPath.transition()
+            .delay(300).duration(900).ease(d3.easeCubicInOut)
+            .attr('d', smallLine).attr('stroke-width', 1.3);
+
+        // 3. After morph: build full sparklines with draw animations
+        const morphEnd = 1300;
+        setTimeout(() => {
+            waveLayer.remove();
+            g.select('.g140-bg').remove();
+            buildSparklineCells(g, stations, binned, cols, rows, headerH,
+                cellW, cellH, pad, cw, ch, globalMaxAbs, 'morph');
+        }, morphEnd);
+    }
+
     // ── Sparklines state ───────────────────────────────────────────
     const BIN_LABELS_KM = ['0–5 km', '5–10 km', '10–20 km', '20–30 km', '30–50 km'];
 
     function drawSparklinesFull(g) {
         const stations = [...DATA.miniWaveforms].sort((a, b) => a.distance_km - b.distance_km);
-        const cols = 5, rows = 4;
-        const headerH = 22;
+        const cols = 5, rows = 4, headerH = 22;
         const cellW = iW / cols, cellH = (iH - headerH) / rows;
         const pad = 4, cw = cellW - pad * 2, ch = cellH - pad * 2;
-
         const globalMaxAbs = d3.max(stations, st =>
             d3.max(st.velocity, d => Math.abs(d))) || 1;
-
         const binned = [[], [], [], [], []];
         stations.forEach(st => binned[st.bin_index].push(st));
+        buildSparklineCells(g, stations, binned, 5, 4, 22,
+            cellW, cellH, pad, cw, ch, globalMaxAbs, false);
+    }
 
+    // Shared: build sparkline grid
+    // mode: false = instant, 'morph' = G140 stays + others animate, 'reveal' = all animate
+    function buildSparklineCells(g, stations, binned, cols, rows, headerH,
+            cellW, cellH, pad, cw, ch, globalMaxAbs, mode) {
+        const animated = mode === 'morph' || mode === 'reveal';
         // Column headers
-        const headersG = g.append('g').attr('class', 'sparkline-headers');
+        const headersG = g.append('g').attr('class', 'sparkline-headers')
+            .attr('opacity', animated ? 0 : 1);
         BIN_LABELS_KM.forEach((label, ci) => {
             headersG.append('text')
                 .attr('x', ci * cellW + cellW / 2).attr('y', 14)
@@ -566,19 +921,25 @@ function initScrolly() {
                 .attr('font-size', '10px').attr('font-weight', '700')
                 .attr('fill', COLORS.muted).text(label);
         });
+        if (animated) headersG.transition().duration(400).attr('opacity', 1);
 
-        // Cells
+        // Cells + PGV dots
         const cellsG = g.append('g').attr('class', 'sparkline-cells');
-        // PGV dots layer (global coords, initially hidden)
         const pgvDotsG = g.append('g').attr('class', 'pgv-dots-layer');
 
+        let cellIdx = 0;
         binned.forEach((binStations, col) => {
             binStations.forEach((st, row) => {
+                const idx = cellIdx++;
                 const cx = col * cellW + pad;
                 const cy = headerH + row * cellH + pad;
+                const isG140 = st.station_id === 'G140';
+                // In morph mode, G140 is already visible (morphed from single waveform)
+                const skipAnim = mode === 'morph' && isG140;
 
                 const cell = cellsG.append('g')
-                    .attr('transform', `translate(${cx},${cy})`);
+                    .attr('transform', `translate(${cx},${cy})`)
+                    .attr('opacity', (animated && !skipAnim) ? 0 : 1);
 
                 cell.append('rect')
                     .attr('width', cw).attr('height', ch).attr('rx', 4)
@@ -589,9 +950,22 @@ function initScrolly() {
                 const sy = d3.scaleLinear().domain([-globalMaxAbs, globalMaxAbs])
                     .range([ch * 0.82, ch * 0.18]);
 
-                cell.append('path').datum(vel)
+                const wavePath = cell.append('path').datum(vel)
                     .attr('fill', 'none').attr('stroke', COLORS.vel).attr('stroke-width', 1.3)
                     .attr('d', d3.line().x((d, j) => sx(times[j])).y(d => sy(d)));
+
+                // Draw animation: waveform traces in
+                const pathLen = wavePath.node().getTotalLength();
+                if (animated && !skipAnim) {
+                    wavePath
+                        .attr('stroke-dasharray', pathLen)
+                        .attr('stroke-dashoffset', pathLen)
+                        .transition()
+                        .delay(idx * 50 + 200)
+                        .duration(800)
+                        .ease(d3.easeCubicOut)
+                        .attr('stroke-dashoffset', 0);
+                }
 
                 cell.append('text').attr('x', 6).attr('y', 13)
                     .attr('font-size', '8px').attr('font-weight', '600').attr('fill', COLORS.muted)
@@ -601,15 +975,22 @@ function initScrolly() {
                     .attr('font-size', '9px').attr('font-weight', '700').attr('fill', COLORS.vel)
                     .text(`${st.pgv_mms.toFixed(1)} mm/s`);
 
-                // Find PGV peak position (global coordinates)
+                // Staggered fade-in for animated cells
+                if (animated && !skipAnim) {
+                    cell.transition().delay(idx * 50).duration(400).attr('opacity', 1);
+                }
+
+                // PGV dot (hidden, for sparklines→scatter transition)
+                // Use Zeerijp CSV data for scatter positioning (distances differ from FDSN metadata)
                 let peakIdx = 0;
                 for (let j = 1; j < vel.length; j++) {
                     if (Math.abs(vel[j]) > Math.abs(vel[peakIdx])) peakIdx = j;
                 }
-
+                const csvMatch = DATA.zeerijp.stations.find(s => s.station_id === st.station_id);
                 pgvDotsG.append('circle')
                     .datum({
-                        dist: st.distance_km, pgv: st.pgv_mms,
+                        dist: csvMatch ? csvMatch.dist : st.distance_km,
+                        pgv: csvMatch ? csvMatch.pgv : st.pgv_mms,
                         station_id: st.station_id, bin: st.bin_index,
                         srcX: cx + sx(times[peakIdx]),
                         srcY: cy + sy(vel[peakIdx]),
@@ -755,10 +1136,19 @@ function initScrolly() {
 
     // ── Forward transitions ─────────────────────────────────────────
     function forwardTransition(from, to) {
+        // Going to map is handled by activateStep early return
+        if (to === 'kaart') return;
+        // Map → sparklines: animated dot transition
+        if (from === 'kaart' && to === 'sparklines') { fwdMapToSparklines(); return; }
+        // Coming from map to anything else
+        if (from === 'kaart') { crossfadeRedraw(to); return; }
+
         const g = svgEl.select('.scrolly-group');
         if (g.empty()) { crossfadeRedraw(to); return; }
 
-        if (from === 'sparklines' && to === 'scatter') {
+        if (from === 'vel-waveform' && to === 'pgv-punt') {
+            fwdVelToPGV(g);
+        } else if (from === 'sparklines' && to === 'scatter') {
             fwdSparklinesToScatter(g);
         } else if (from === 'scatter' && to === 'drie-bevingen') {
             fwdScatterToThree(g);
@@ -867,7 +1257,7 @@ function initScrolly() {
     // Pre-draw first chart when scrolly section enters
     const sectionObs = new IntersectionObserver(entries => {
         if (entries[0].isIntersecting) {
-            activateStep('sparklines');
+            activateStep('vel-waveform');
             sectionObs.disconnect();
         }
     }, { threshold: 0.05 });
@@ -1039,9 +1429,6 @@ function drawInlineWaveforms(w) {
     drawOne('inline-acc', w.acceleration, w.pga, w.acc_unit, COLORS.acc,
             `PGA = ${w.pga.value.toFixed(1)} ${w.acc_unit}`,
             `Grondversnelling (${w.acc_unit})`);
-    drawOne('inline-vel', w.velocity, w.pgv, w.unit, COLORS.vel,
-            `PGV = ${w.pgv.value.toFixed(1)} ${w.unit}`,
-            'Grondsnelheid (mm/s)');
 }
 
 // ── Mini waveforms (real KNMI data, columns = distance bins) ────────────────

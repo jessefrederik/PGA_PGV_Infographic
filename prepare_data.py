@@ -146,6 +146,18 @@ mini_stations = [
     for i in indices
 ]
 
+# Enrich mini_stations with lat/lon from mini_waveforms.json (KNMI FDSN coordinates)
+mini_wf_path = DATA / "mini_waveforms.json"
+if mini_wf_path.exists():
+    with open(mini_wf_path) as f:
+        mini_wf = json.load(f)
+    coord_map = {s["station_id"]: (s.get("lat"), s.get("lon")) for s in mini_wf}
+    for ms in mini_stations:
+        lat, lon = coord_map.get(ms["station_id"], (None, None))
+        if lat is not None:
+            ms["lat"] = lat
+            ms["lon"] = lon
+
 # Step 2-3: Scatter events
 three_events = []
 for eid in ["GRN_24", "GRN_26", "GRN_35"]:
