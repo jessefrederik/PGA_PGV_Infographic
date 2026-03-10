@@ -11,6 +11,9 @@ Hoe seismologen meten hoe hard de grond trilt
 
 Verspreid over Groningen liggen honderden **accelerometers** in de grond — kastjes zo groot als een schoenendoos. Binnenin hangt een gewichtje aan een veer. Beweegt de grond, dan beweegt het kastje mee — maar het gewichtje blijft even achter. Dat verschil levert een elektrisch signaal op: de **grondversnelling**.
 
+
+## intro2
+
 Hier zie je de metingen van zo'n accelerometer, op 1,1 kilometer van de **aardbeving bij Zeerijp** op 8 januari 2018.
 
 

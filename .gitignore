@@ -3,3 +3,8 @@ __pycache__/
 *.pyc
 .DS_Store
 data/*.csv
+
+# Flourish build artifacts
+*/template.js
+*/template.js.map
+*/node_modules/

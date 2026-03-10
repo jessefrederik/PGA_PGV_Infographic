@@ -95,6 +95,114 @@
         .article-prose strong { font-weight: 700; }
         .article-prose em { font-style: italic; }
 
+        /* ── Accelerometer diagram ─────────────────────────────────────── */
+        .accel-diagram {
+            max-width: min(95vw, 900px);
+            margin: 2rem auto 2.5rem;
+            padding: 0 1rem;
+        }
+        .accel-diagram svg { display: block; width: 100%; height: auto; }
+
+        /* Animation cycle: 3s rest → 4s quake → 3s rest (10s total) */
+        .accel-housing {
+            animation: accel-shake 10s ease-in-out infinite;
+        }
+        .accel-mass {
+            animation: accel-mass-lag 10s ease-in-out infinite;
+        }
+        .accel-spring polyline {
+            animation: accel-spring-flex 10s ease-in-out infinite;
+        }
+        .accel-wire {
+            animation: accel-wire-move 10s ease-in-out infinite;
+        }
+
+        /* State text: crossfade */
+        .accel-state-rest { animation: accel-show-rest 10s ease-in-out infinite; }
+        .accel-state-quake { animation: accel-show-quake 10s ease-in-out infinite; }
+        .accel-arrows { animation: accel-show-quake 10s ease-in-out infinite; }
+
+        /* Signal trace: draws during quake */
+        .accel-signal-line {
+            animation: accel-draw-signal 10s linear infinite;
+        }
+
+        @keyframes accel-shake {
+            0%, 28% { transform: translateX(0); }
+            32% { transform: translateX(12px); }
+            36% { transform: translateX(-14px); }
+            39% { transform: translateX(10px); }
+            42% { transform: translateX(-11px); }
+            45% { transform: translateX(8px); }
+            48% { transform: translateX(-7px); }
+            51% { transform: translateX(5px); }
+            54% { transform: translateX(-4px); }
+            57% { transform: translateX(2px); }
+            60% { transform: translateX(-1px); }
+            65%, 100% { transform: translateX(0); }
+        }
+
+        @keyframes accel-mass-lag {
+            0%, 28% { transform: translateX(0); }
+            34% { transform: translateX(-6px); }
+            38% { transform: translateX(8px); }
+            41% { transform: translateX(-5px); }
+            44% { transform: translateX(6px); }
+            47% { transform: translateX(-4px); }
+            50% { transform: translateX(3px); }
+            53% { transform: translateX(-2px); }
+            56% { transform: translateX(1.5px); }
+            59% { transform: translateX(-0.5px); }
+            65%, 100% { transform: translateX(0); }
+        }
+
+        @keyframes accel-spring-flex {
+            0%, 28% { transform: scaleX(1); }
+            32% { transform: scaleX(1.12); }
+            36% { transform: scaleX(0.85); }
+            39% { transform: scaleX(1.08); }
+            42% { transform: scaleX(0.9); }
+            45% { transform: scaleX(1.05); }
+            48% { transform: scaleX(0.93); }
+            51% { transform: scaleX(1.03); }
+            54% { transform: scaleX(0.96); }
+            57% { transform: scaleX(1.01); }
+            65%, 100% { transform: scaleX(1); }
+        }
+
+        @keyframes accel-wire-move {
+            0%, 28% { transform: translateX(0); }
+            34% { transform: translateX(-6px); }
+            38% { transform: translateX(8px); }
+            41% { transform: translateX(-5px); }
+            44% { transform: translateX(6px); }
+            47% { transform: translateX(-4px); }
+            50% { transform: translateX(3px); }
+            53% { transform: translateX(-2px); }
+            56% { transform: translateX(1.5px); }
+            65%, 100% { transform: translateX(0); }
+        }
+
+        @keyframes accel-show-rest {
+            0%, 25% { opacity: 1; }
+            30%, 65% { opacity: 0; }
+            70%, 100% { opacity: 1; }
+        }
+        @keyframes accel-show-quake {
+            0%, 25% { opacity: 0; }
+            32%, 62% { opacity: 1; }
+            68%, 100% { opacity: 0; }
+        }
+
+        @keyframes accel-draw-signal {
+            0%, 28% { d: path("M0,32 Q15,32 30,32 T60,32"); }
+            35% { d: path("M0,32 Q15,32 30,32 T60,32 Q80,4 100,32 Q120,60 140,32"); }
+            42% { d: path("M0,32 Q15,32 30,32 T60,32 Q80,4 100,32 Q120,60 140,32 Q155,8 170,32 Q185,54 200,32"); }
+            50% { d: path("M0,32 Q15,32 30,32 T60,32 Q80,4 100,32 Q120,60 140,32 Q155,8 170,32 Q185,54 200,32 Q212,12 224,32 Q236,48 248,32"); }
+            58% { d: path("M0,32 Q15,32 30,32 T60,32 Q80,4 100,32 Q120,60 140,32 Q155,8 170,32 Q185,54 200,32 Q212,12 224,32 Q236,48 248,32 Q258,18 268,32 Q278,42 288,32 Q296,26 304,32 T330,32"); }
+            66%, 100% { d: path("M0,32 Q15,32 30,32 T60,32 Q80,4 100,32 Q120,60 140,32 Q155,8 170,32 Q185,54 200,32 Q212,12 224,32 Q236,48 248,32 Q258,18 268,32 Q278,42 288,32 Q296,26 304,32 T330,32 Q345,32 370,32"); }
+        }
+
         /* ── Inline charts ──────────────────────────────────────────────── */
         .inline-chart {
             max-width: min(95vw, 1100px);
@@ -332,6 +440,102 @@
 </div>
 
 <div class="article-prose reveal" id="prose-intro"></div>
+
+<div class="accel-diagram reveal">
+    <svg viewBox="0 0 860 280" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <pattern id="ground-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <line x1="0" y1="0" x2="0" y2="6" stroke="#C4BFB6" stroke-width="1"/>
+            </pattern>
+            <linearGradient id="housing-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#E8E4DE"/>
+                <stop offset="100%" stop-color="#D8D3CB"/>
+            </linearGradient>
+            <linearGradient id="mass-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#6B6B6B"/>
+                <stop offset="100%" stop-color="#4A4A4A"/>
+            </linearGradient>
+        </defs>
+
+        <!-- Ground layer (full width) -->
+        <g class="accel-ground">
+            <rect x="0" y="210" width="860" height="70" fill="url(#ground-hatch)" opacity="0.5"/>
+            <line x1="0" y1="210" x2="860" y2="210" stroke="#B8B4AE" stroke-width="1.5"/>
+        </g>
+
+        <!-- Whole sensor unit (moves with ground) — centered left -->
+        <g class="accel-housing">
+            <!-- Housing box -->
+            <rect x="80" y="80" width="250" height="130" rx="8"
+                fill="url(#housing-fill)" stroke="#A8A29E" stroke-width="2"/>
+            <!-- Housing interior -->
+            <rect x="96" y="96" width="218" height="98" rx="4"
+                fill="#FAFAF8" stroke="#D0CDC7" stroke-width="1.2"/>
+
+            <!-- Spring: zigzag from left wall to mass -->
+            <g class="accel-spring">
+                <polyline points="96,145 110,122 124,168 138,122 152,168 166,122 180,145"
+                    fill="none" stroke="#A8A29E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+
+            <!-- Mass (moves independently, lags behind) -->
+            <g class="accel-mass">
+                <rect x="180" y="118" width="56" height="56" rx="4"
+                    fill="url(#mass-fill)" stroke="#3D3D3D" stroke-width="1.2"/>
+            </g>
+
+            <!-- Wire / sensor indicator -->
+            <line x1="236" y1="145" x2="314" y2="145"
+                stroke="#C44D3F" stroke-width="2" stroke-dasharray="4,3" class="accel-wire"/>
+            <circle cx="314" cy="145" r="4" fill="#C44D3F" opacity="0.8"/>
+
+            <!-- Label: behuizing -->
+            <text x="205" y="72" text-anchor="middle"
+                font-family="'Libre Franklin', sans-serif" font-size="12" font-weight="600" fill="#6B6B6B">behuizing</text>
+            <!-- Label: gewicht -->
+            <text x="208" y="190" text-anchor="middle"
+                font-family="'Libre Franklin', sans-serif" font-size="11" fill="#6B6B6B">gewicht</text>
+            <!-- Label: veer -->
+            <text x="138" y="112" text-anchor="middle"
+                font-family="'Libre Franklin', sans-serif" font-size="11" fill="#6B6B6B">veer</text>
+        </g>
+
+        <!-- Right side: labels + signal -->
+        <g class="accel-labels" font-family="'Libre Franklin', sans-serif">
+            <!-- State 1: Rest -->
+            <g class="accel-state-rest">
+                <text x="430" y="105" font-size="16" font-weight="700" fill="#2D2D2D">In rust</text>
+                <text x="430" y="130" font-size="13" fill="#6B6B6B">Kastje en gewicht staan stil.</text>
+                <text x="430" y="150" font-size="13" fill="#6B6B6B">Geen signaal.</text>
+            </g>
+            <!-- State 2: Quake -->
+            <g class="accel-state-quake">
+                <text x="430" y="105" font-size="16" font-weight="700" fill="#C44D3F">Grond beweegt</text>
+                <text x="430" y="130" font-size="13" fill="#6B6B6B">De behuizing schudt mee met de</text>
+                <text x="430" y="150" font-size="13" fill="#6B6B6B">grond — het gewicht blijft achter.</text>
+                <text x="430" y="178" font-size="13" font-weight="600" fill="#C44D3F">Dat verschil = grondversnelling</text>
+            </g>
+
+            <!-- Signal trace (wider) -->
+            <g class="accel-signal" transform="translate(430, 200)">
+                <line x1="0" y1="32" x2="380" y2="32" stroke="#E3E0DB" stroke-width="1"/>
+                <text x="0" y="62" font-size="10" fill="#6B6B6B">signaal →</text>
+                <path class="accel-signal-line" d="M0,32 Q15,32 30,32 T60,32"
+                    fill="none" stroke="#C44D3F" stroke-width="2" stroke-linecap="round"/>
+            </g>
+        </g>
+
+        <!-- Ground motion arrows (visible during quake) -->
+        <g class="accel-arrows">
+            <text x="205" y="238" text-anchor="middle"
+                font-family="'Libre Franklin', sans-serif" font-size="12" font-weight="600" fill="#C44D3F">
+                ← grondbeweging →
+            </text>
+        </g>
+    </svg>
+</div>
+
+<div class="article-prose reveal" id="prose-intro2"></div>
 
 <div class="inline-chart reveal" id="inline-acc">
     <svg></svg>
