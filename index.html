@@ -312,15 +312,11 @@
     <div class="tooltip"></div>
 </div>
 
-<div class="article-prose reveal" id="prose-pgv-uitleg"></div>
-
-<div class="inline-chart reveal" id="inline-sparklines">
-    <svg></svg>
-    <div class="tooltip"></div>
-</div>
-
 <section class="scrolly" id="scrolly">
     <div class="scrolly-steps">
+        <div class="step" data-step="sparklines">
+            <div class="step-text" id="prose-pgv-uitleg"></div>
+        </div>
         <div class="step" data-step="scatter">
             <div class="step-text" id="prose-scatter"></div>
         </div>
@@ -450,9 +446,7 @@ function setupChart(containerId, vbH) {
 }
 
 function initAllCharts() {
-    const charts = [
-        { id: 'inline-sparklines', draw: showManyWaveforms, vbH: 480 },
-    ];
+    const charts = [];
 
     // Draw each chart when its reveal animation triggers
     charts.forEach(({ id, draw, vbH }) => {
@@ -477,7 +471,7 @@ function initScrolly() {
     const steps = document.querySelectorAll('.scrolly .step');
     let currentStep = null;
 
-    const STEPS = ['scatter', 'drie-bevingen', 'boxplots', 'internationaal'];
+    const STEPS = ['sparklines', 'scatter', 'drie-bevingen', 'boxplots', 'internationaal'];
 
     // Ensure dimensions are set
     iW = VB_W - M.left - M.right;
@@ -539,11 +533,174 @@ function initScrolly() {
 
     function drawFullState(stepName, g) {
         switch (stepName) {
+            case 'sparklines':     drawSparklinesFull(g); break;
             case 'scatter':        drawScatterFull(g, false); break;
             case 'drie-bevingen':  drawScatterFull(g, true); break;
             case 'boxplots':       showBoxPlots(g); break;
             case 'internationaal': showInternational(g); break;
         }
+    }
+
+    // ── Sparklines state ───────────────────────────────────────────
+    const BIN_LABELS_KM = ['0–5 km', '5–10 km', '10–20 km', '20–30 km', '30–50 km'];
+
+    function drawSparklinesFull(g) {
+        const stations = [...DATA.miniWaveforms].sort((a, b) => a.distance_km - b.distance_km);
+        const cols = 5, rows = 4;
+        const headerH = 22;
+        const cellW = iW / cols, cellH = (iH - headerH) / rows;
+        const pad = 4, cw = cellW - pad * 2, ch = cellH - pad * 2;
+
+        const globalMaxAbs = d3.max(stations, st =>
+            d3.max(st.velocity, d => Math.abs(d))) || 1;
+
+        const binned = [[], [], [], [], []];
+        stations.forEach(st => binned[st.bin_index].push(st));
+
+        // Column headers
+        const headersG = g.append('g').attr('class', 'sparkline-headers');
+        BIN_LABELS_KM.forEach((label, ci) => {
+            headersG.append('text')
+                .attr('x', ci * cellW + cellW / 2).attr('y', 14)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', '10px').attr('font-weight', '700')
+                .attr('fill', COLORS.muted).text(label);
+        });
+
+        // Cells
+        const cellsG = g.append('g').attr('class', 'sparkline-cells');
+        // PGV dots layer (global coords, initially hidden)
+        const pgvDotsG = g.append('g').attr('class', 'pgv-dots-layer');
+
+        binned.forEach((binStations, col) => {
+            binStations.forEach((st, row) => {
+                const cx = col * cellW + pad;
+                const cy = headerH + row * cellH + pad;
+
+                const cell = cellsG.append('g')
+                    .attr('transform', `translate(${cx},${cy})`);
+
+                cell.append('rect')
+                    .attr('width', cw).attr('height', ch).attr('rx', 4)
+                    .attr('fill', '#fff').attr('stroke', '#E3E0DB');
+
+                const vel = st.velocity, times = st.times;
+                const sx = d3.scaleLinear().domain(d3.extent(times)).range([4, cw - 4]);
+                const sy = d3.scaleLinear().domain([-globalMaxAbs, globalMaxAbs])
+                    .range([ch * 0.82, ch * 0.18]);
+
+                cell.append('path').datum(vel)
+                    .attr('fill', 'none').attr('stroke', COLORS.vel).attr('stroke-width', 1.3)
+                    .attr('d', d3.line().x((d, j) => sx(times[j])).y(d => sy(d)));
+
+                cell.append('text').attr('x', 6).attr('y', 13)
+                    .attr('font-size', '8px').attr('font-weight', '600').attr('fill', COLORS.muted)
+                    .text(`${st.station_id} · ${st.distance_km.toFixed(1)} km`);
+                cell.append('text').attr('x', cw - 4).attr('y', ch - 4)
+                    .attr('text-anchor', 'end')
+                    .attr('font-size', '9px').attr('font-weight', '700').attr('fill', COLORS.vel)
+                    .text(`${st.pgv_mms.toFixed(1)} mm/s`);
+
+                // Find PGV peak position (global coordinates)
+                let peakIdx = 0;
+                for (let j = 1; j < vel.length; j++) {
+                    if (Math.abs(vel[j]) > Math.abs(vel[peakIdx])) peakIdx = j;
+                }
+
+                pgvDotsG.append('circle')
+                    .datum({
+                        dist: st.distance_km, pgv: st.pgv_mms,
+                        station_id: st.station_id, bin: st.bin_index,
+                        srcX: cx + sx(times[peakIdx]),
+                        srcY: cy + sy(vel[peakIdx]),
+                    })
+                    .attr('class', 'pgv-dot')
+                    .attr('cx', cx + sx(times[peakIdx]))
+                    .attr('cy', cy + sy(vel[peakIdx]))
+                    .attr('r', 0).attr('fill', COLORS.vel).attr('opacity', 0);
+            });
+        });
+    }
+
+    // sparklines → scatter: waveforms collapse to PGV dots, fly to scatter
+    function fwdSparklinesToScatter(g) {
+        // 1. Highlight PGV dots on each waveform
+        g.select('.pgv-dots-layer').selectAll('.pgv-dot')
+            .transition().duration(400)
+            .attr('r', 5).attr('opacity', 1)
+            .attr('stroke', '#fff').attr('stroke-width', 2);
+
+        // 2. Fade out sparkline cells + headers
+        g.select('.sparkline-cells')
+            .transition().delay(300).duration(500).attr('opacity', 0)
+            .on('end', function() { d3.select(this).remove(); });
+        g.select('.sparkline-headers')
+            .transition().delay(300).duration(500).attr('opacity', 0)
+            .on('end', function() { d3.select(this).remove(); });
+
+        // 3. Fade in log-log axes
+        const axesG = g.append('g').attr('class', 'axes-layer').attr('opacity', 0);
+        drawLogAxes(axesG, scatX, sharedY);
+        axisLabel(axesG, 'Afstand tot epicentrum (km)', 'PGV (mm/s)');
+        axesG.transition().delay(600).duration(500).attr('opacity', 1);
+
+        // 4. Fly PGV dots to scatter positions
+        g.select('.pgv-dots-layer').selectAll('.pgv-dot')
+            .transition().delay(700).duration(900).ease(d3.easeCubicInOut)
+            .attr('cx', d => scatX(d.dist))
+            .attr('cy', d => sharedY(Math.max(d.pgv, 0.01)))
+            .attr('r', 4).attr('stroke-width', 0).attr('opacity', 0.7);
+
+        // 5. After flying, add remaining scatter dots
+        setTimeout(() => {
+            // Convert pgv-dots layer to dots-layer
+            const layer = g.select('.pgv-dots-layer').attr('class', 'dots-layer');
+            const existingIds = new Set();
+            layer.selectAll('.pgv-dot').each(function(d) {
+                existingIds.add(d.station_id);
+            });
+
+            // Restyle landed dots as scatter dots
+            layer.selectAll('.pgv-dot')
+                .attr('class', 'scatter-dot dot-ev-0')
+                .attr('r', 3.5).attr('opacity', 0.55)
+                .each(function(d) { d.eventIdx = 0; d.eventName = DATA.zeerijp.name; })
+                .style('cursor', 'pointer')
+                .on('mouseenter', function(event, d) {
+                    d3.select(this).attr('r', 6).attr('opacity', 1);
+                    showTip(`<b>${d.station_id}</b><br>${d.dist.toFixed(1)} km<br>${d.pgv.toFixed(2)} mm/s`, event);
+                })
+                .on('mousemove', (event, d) =>
+                    showTip(`<b>${d.station_id}</b><br>${d.dist.toFixed(1)} km<br>${d.pgv.toFixed(2)} mm/s`, event))
+                .on('mouseleave', function(event) {
+                    d3.select(this).attr('r', 3.5).attr('opacity', 0.55); hideTip(event);
+                });
+
+            // Add remaining Zeerijp stations
+            const remaining = DATA.zeerijp.stations.filter(s => !existingIds.has(s.station_id));
+            layer.selectAll('.remaining')
+                .data(remaining.map(s => ({
+                    ...s, eventIdx: 0, eventName: DATA.zeerijp.name,
+                    bin: getBinIndex(s.dist)
+                })))
+                .join('circle')
+                .attr('class', 'scatter-dot dot-ev-0')
+                .attr('cx', d => scatX(d.dist))
+                .attr('cy', d => sharedY(Math.max(d.pgv, 0.01)))
+                .attr('r', 0).attr('fill', COLORS.nl).attr('opacity', 0)
+                .style('cursor', 'pointer')
+                .on('mouseenter', function(event, d) {
+                    d3.select(this).attr('r', 6).attr('opacity', 1);
+                    showTip(`<b>${d.station_id || ''}</b><br>${d.dist.toFixed(1)} km<br>${d.pgv.toFixed(2)} mm/s`, event);
+                })
+                .on('mousemove', (event, d) =>
+                    showTip(`<b>${d.station_id || ''}</b><br>${d.dist.toFixed(1)} km<br>${d.pgv.toFixed(2)} mm/s`, event))
+                .on('mouseleave', function(event) {
+                    d3.select(this).attr('r', 3.5).attr('opacity', 0.55); hideTip(event);
+                })
+                .transition().duration(500)
+                .attr('r', 3.5).attr('opacity', 0.55);
+        }, 1700);
     }
 
     // ── Scatter state (one or three events) ─────────────────────────
@@ -601,7 +758,9 @@ function initScrolly() {
         const g = svgEl.select('.scrolly-group');
         if (g.empty()) { crossfadeRedraw(to); return; }
 
-        if (from === 'scatter' && to === 'drie-bevingen') {
+        if (from === 'sparklines' && to === 'scatter') {
+            fwdSparklinesToScatter(g);
+        } else if (from === 'scatter' && to === 'drie-bevingen') {
             fwdScatterToThree(g);
         } else if (from === 'drie-bevingen' && to === 'boxplots') {
             fwdThreeToBox(g);
@@ -708,7 +867,7 @@ function initScrolly() {
     // Pre-draw first chart when scrolly section enters
     const sectionObs = new IntersectionObserver(entries => {
         if (entries[0].isIntersecting) {
-            activateStep('scatter');
+            activateStep('sparklines');
             sectionObs.disconnect();
         }
     }, { threshold: 0.05 });
