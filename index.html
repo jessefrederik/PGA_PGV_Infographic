@@ -427,6 +427,138 @@
             }
             .step { min-height: 55vh; }
         }
+        /* ── Sneeuwhoen easter egg ─────────────────────────────────────── */
+        .hoen-container {
+            position: fixed;
+            bottom: 40px;
+            left: -120px;
+            width: 100px;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0;
+        }
+        /* March position is now scroll-driven (set via JS) */
+        /* Legs: short crouched steps, small rotation (ptarmigan have short legs) */
+        .hoen-poot-links {
+            transform-origin: 40px 55px;
+            animation: hoen-stap 0.35s ease-in-out infinite;
+        }
+        .hoen-poot-rechts {
+            transform-origin: 52px 55px;
+            animation: hoen-stap 0.35s ease-in-out infinite 0.175s;
+        }
+        @keyframes hoen-stap {
+            0%, 100% { transform: rotate(0deg); }
+            50%      { transform: rotate(-15deg); }
+        }
+        /* Body: very subtle bob — ptarmigan are compact and low */
+        .hoen-body { animation: hoen-bob 0.35s ease-in-out infinite; }
+        @keyframes hoen-bob {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-1.5px); }
+        }
+        /* Head bob: thrust-and-hold (galliform style) — fast forward, slow hold */
+        .hoen-kop {
+            animation: hoen-headbob 0.35s ease-out infinite;
+        }
+        @keyframes hoen-headbob {
+            0%   { transform: translateX(0); }
+            25%  { transform: translateX(2.5px); }  /* quick thrust forward */
+            100% { transform: translateX(0); }       /* slow hold/retract as body catches up */
+        }
+        /* Tail: slight droop, minimal movement */
+        .hoen-staart { transform-origin: 22px 42px; animation: hoen-wag 0.8s ease-in-out infinite; }
+        @keyframes hoen-wag {
+            0%, 100% { transform: rotate(0deg); }
+            50%      { transform: rotate(2deg); }
+        }
+        /* Freeze-stop: pause all walk animations (ptarmigan freeze mid-walk!) */
+        .hoen-freeze .hoen-body,
+        .hoen-freeze .hoen-kop,
+        .hoen-freeze .hoen-poot-links,
+        .hoen-freeze .hoen-poot-rechts,
+        .hoen-freeze .hoen-staart {
+            animation-play-state: paused;
+        }
+        /* Sniff animation: head dips down to investigate (infinite while class active) */
+        .hoen-sniff .hoen-kop {
+            animation: hoen-sniff-bob 0.3s ease-in-out infinite !important;
+            animation-play-state: running !important;
+            transform-origin: 64px 38px;
+        }
+        @keyframes hoen-sniff-bob {
+            0%, 100% { transform: rotate(0deg); }
+            50%      { transform: rotate(-20deg); } /* look UP toward waveform */
+        }
+        /* Big cartoonish AWEBO! yell bubble */
+        .hoen-awebo {
+            position: fixed;
+            z-index: 1000;
+            pointer-events: none;
+            width: 260px;
+            bottom: 130px;
+            left: 50vw;
+            opacity: 0;
+            transform: scale(0) rotate(-5deg);
+            transform-origin: 15% 100%;
+            transition: opacity 0.12s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .hoen-awebo.active {
+            opacity: 1;
+            transform: scale(1) rotate(-3deg);
+        }
+        /* ── Attack finale ────────────────────────────────────────────── */
+        /* Return walk: flipped, from right to center */
+        .hoen-container.hoen-return {
+            animation: hoen-return 3s linear forwards;
+            opacity: 1;
+            transform: scaleX(-1);
+        }
+        @keyframes hoen-return {
+            0%   { left: calc(100vw + 120px); }
+            100% { left: calc(50vw - 50px); }
+        }
+        /* Front-facing attack view */
+        .hoen-face-container {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 150px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s;
+        }
+        .hoen-face-container.hoen-zoom {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(8);
+        }
+        .hoen-face-container.hoen-lunge {
+            transform: translate(-50%, -50%) scale(14);
+        }
+        /* Screen shake on attack */
+        .hoen-shake {
+            animation: hoen-screen-shake 0.4s ease-out;
+        }
+        @keyframes hoen-screen-shake {
+            0%, 100% { transform: translate(0, 0); }
+            10%  { transform: translate(-8px, 4px); }
+            30%  { transform: translate(6px, -6px); }
+            50%  { transform: translate(-4px, 3px); }
+            70%  { transform: translate(5px, -2px); }
+            90%  { transform: translate(-2px, 1px); }
+        }
+        /* Black flash overlay */
+        .hoen-blackout {
+            position: fixed;
+            inset: 0;
+            background: black;
+            z-index: 1001;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .hoen-blackout.active { opacity: 1; }
     </style>
 </head>
 <body>
@@ -712,6 +844,7 @@ function initScrolly() {
     const chartContainer = document.getElementById('scrolly-chart');
     const steps = document.querySelectorAll('.scrolly .step');
     let currentStep = null;
+    let hoenShown = false;
 
     const STEPS = ['vel-waveform', 'pgv-punt', 'kaart', 'sparklines', 'scatter', 'drie-bevingen', 'boxplots', 'internationaal'];
 
@@ -914,6 +1047,143 @@ function initScrolly() {
 
         steps.forEach(s => s.classList.remove('active'));
         document.querySelector(`.step[data-step="${stepName}"]`)?.classList.add('active');
+
+        // 🐦 Sneeuwhoen easter egg — eenmalig bij sparklines-stap (waveforms visible)
+        if (stepName === 'sparklines' && !hoenShown) {
+            hoenShown = true;
+            startHoenSequence();
+        }
+    }
+
+    // ── 🐦 Sneeuwhoen: scroll-driven march → sniff waveform → AWEBO! → attack ──
+    function startHoenSequence() {
+        const hoen = document.getElementById('sneeuwhoen');
+        const awebo = document.getElementById('hoen-awebo');
+        const face = document.getElementById('hoen-face');
+        const blackout = document.getElementById('hoen-blackout');
+
+        const sparkStep = document.querySelector('.step[data-step="sparklines"]');
+        const endStep = document.querySelector('.step[data-step="boxplots"]');
+        // Scroll distance from sparklines to boxplots (3 steps, ~255vh)
+        const scrollRange = endStep.getBoundingClientRect().top - sparkStep.getBoundingClientRect().top;
+        const triggerY = window.innerHeight * 0.55;
+
+        // Calculate where the 2nd sparkline column is on screen
+        // SVG viewBox 800×480, M.left=60, cellW=142 → col 1 center = 60 + 142 + 71 = 273
+        const chartSvg = document.querySelector('.scrolly-chart svg');
+        const svgRect = chartSvg.getBoundingClientRect();
+        const scale = svgRect.width / 800;
+        const waveformX = svgRect.left + 273 * scale;   // viewport x of 2nd column center
+        const sniffLeft = waveformX - 68;                // bird left so head (x=68) aligns
+
+        let attackStarted = false;
+        let ticking = false;
+
+        function lerp(a, b, t) { return a + (b - a) * Math.max(0, Math.min(1, t)); }
+
+        function update() {
+            ticking = false;
+            if (attackStarted) return;
+
+            const p = (triggerY - sparkStep.getBoundingClientRect().top) / scrollRange;
+            const vw = window.innerWidth / 100;
+            const freeze1X = 22 * vw;
+
+            // Hide if before range
+            if (p < -0.02) { hoen.style.opacity = '0'; return; }
+            hoen.style.opacity = '1';
+
+            // States based on scroll progress
+            const inFreeze1 = p >= 0.12 && p < 0.16;
+            const inSniff   = p >= 0.38 && p < 0.48;
+            const inAwebo   = p >= 0.48 && p < 0.58;
+            const frozen    = inFreeze1 || inSniff || inAwebo;
+
+            hoen.classList.toggle('hoen-freeze', frozen);
+            hoen.classList.toggle('hoen-sniff', inSniff);
+            awebo.classList.toggle('active', inAwebo);
+
+            // Horizontal position — walk to the waveform, stop, then walk off
+            let leftPx;
+            if (p < 0.12) {
+                leftPx = lerp(-120, freeze1X, Math.max(0, p) / 0.12);
+            } else if (p < 0.16) {
+                leftPx = freeze1X;               // freeze #1
+            } else if (p < 0.38) {
+                leftPx = lerp(freeze1X, sniffLeft, (p - 0.16) / 0.22);  // walk to waveform
+            } else if (p < 0.58) {
+                leftPx = sniffLeft;              // stopped at waveform (sniff + AWEBO)
+            } else if (p <= 1.0) {
+                leftPx = lerp(sniffLeft, window.innerWidth + 120, (p - 0.58) / 0.42);
+            } else {
+                leftPx = window.innerWidth + 120;
+                attackStarted = true;
+                window.removeEventListener('scroll', onScroll);
+                startAttackFinale(hoen, face, awebo, blackout);
+            }
+
+            hoen.style.left = leftPx + 'px';
+
+            // Position AWEBO bubble above bird's head
+            if (inAwebo) {
+                awebo.style.left = Math.min(leftPx + 80, window.innerWidth - 280) + 'px';
+            }
+        }
+
+        function onScroll() {
+            if (!ticking) { requestAnimationFrame(update); ticking = true; }
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        update();
+    }
+
+    // ── Attack finale (timer-based cinematic sequence) ──
+    function startAttackFinale(hoen, face, awebo, blackout) {
+        // Reset inline left so CSS animation can take over
+        hoen.style.removeProperty('left');
+        hoen.classList.remove('hoen-freeze');
+        hoen.classList.remove('hoen-sniff');
+        awebo.classList.remove('active');
+
+        // Return walk: flipped, right → center
+        void hoen.offsetWidth;
+        hoen.classList.add('hoen-return');
+
+        // Freeze at center + AWEBO!
+        setTimeout(() => {
+            hoen.classList.add('hoen-freeze');
+            awebo.style.left = 'calc(50vw + 60px)';
+            awebo.classList.add('active');
+        }, 3000);
+
+        // Face camera — hide side view + bubble, show front view
+        setTimeout(() => {
+            awebo.classList.remove('active');
+            hoen.style.opacity = '0';
+            face.classList.add('hoen-zoom');
+        }, 4000);
+
+        // ATTACK! — lunge + screen shake
+        setTimeout(() => {
+            face.classList.remove('hoen-zoom');
+            face.classList.add('hoen-lunge');
+            document.body.classList.add('hoen-shake');
+        }, 5000);
+
+        // Blackout flash
+        setTimeout(() => { blackout.classList.add('active'); }, 5500);
+
+        // Clean up
+        setTimeout(() => {
+            blackout.classList.remove('active');
+            face.classList.remove('hoen-lunge');
+            face.style.opacity = '0';
+            document.body.classList.remove('hoen-shake');
+            hoen.style.display = 'none';
+            face.style.display = 'none';
+            awebo.style.display = 'none';
+        }, 6500);
     }
 
     // ── Crossfade (backward or jump) ────────────────────────────────
@@ -2194,5 +2464,127 @@ function showLegend(container, items) {
     ).join('');
 }
 </script>
+
+<!-- Sneeuwhoen easter egg -->
+<div id="sneeuwhoen" class="hoen-container">
+    <svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <g class="hoen-body">
+            <!-- Staart: short, angled slightly DOWN (not up!) — follows body line -->
+            <g class="hoen-staart">
+                <path d="M22 42 Q14 44, 8 48"  stroke="#B8B3AA" stroke-width="1.8" fill="none"/>
+                <path d="M22 44 Q12 47, 7 52"   stroke="#B8B3AA" stroke-width="1.5" fill="none"/>
+                <path d="M23 40 Q16 42, 10 45"  stroke="#C4BFB6" stroke-width="1.3" fill="none"/>
+            </g>
+            <!-- Lijf: compact oval, slightly tilted forward (front lower) -->
+            <ellipse cx="45" cy="42" rx="26" ry="16" fill="url(#hoen-body-fill)" stroke="#B8B3AA" stroke-width="1.2"
+                     transform="rotate(-3 45 42)"/>
+            <!-- Vleugeltekening -->
+            <path d="M30 39 Q42 34, 56 40" stroke="#C4BFB6" stroke-width="1" fill="none"/>
+            <path d="M32 42 Q44 38, 55 43" stroke="#D0CBC3" stroke-width="0.8" fill="none"/>
+            <!-- Kop: in a separate group for head-bob animation -->
+            <g class="hoen-kop">
+                <circle cx="68" cy="32" r="10" fill="#E8E4DE" stroke="#B8B3AA" stroke-width="1.2"/>
+                <!-- Rode wenkbrauw / kam (kenmerkend voor sneeuwhoen!) -->
+                <path d="M63 27 Q67 24, 74 26" stroke="#C44D3F" stroke-width="2.2" fill="none"/>
+                <!-- Oog -->
+                <circle cx="70" cy="31" r="1.5" fill="#2D2D2D"/>
+                <circle cx="70.4" cy="30.6" r="0.5" fill="white"/>
+                <!-- Snavel: small, dark, slightly curved -->
+                <path d="M77 33 L83 32 L77 35 Z" fill="#5A5550" stroke="#4A4540" stroke-width="0.6"/>
+            </g>
+        </g>
+        <!-- Poot links: short, crouched, with feathered snowshoe feet -->
+        <g class="hoen-poot-links">
+            <!-- Tarsus (short!) -->
+            <line x1="40" y1="55" x2="38" y2="66" stroke="#8A8580" stroke-width="1.3"/>
+            <!-- Gevederde bovenpoot (dense feathering = Lagopus "rabbit foot") -->
+            <path d="M39 54 Q42 58, 39 61" stroke="#E8E4DE" stroke-width="3" fill="none"/>
+            <path d="M40 54 Q43 57, 40 60" stroke="#D8D3CB" stroke-width="2" fill="none"/>
+            <!-- Feathered toes (snowshoe!) — wider spread than normal bird -->
+            <path d="M38 66 L33 70 M38 66 L38 71 M38 66 L43 70" stroke="#8A8580" stroke-width="1"/>
+            <!-- Toe feathering -->
+            <path d="M36 68 Q38 66, 40 68" stroke="#E8E4DE" stroke-width="1.5" fill="none"/>
+        </g>
+        <!-- Poot rechts: offset for alternating gait -->
+        <g class="hoen-poot-rechts">
+            <line x1="52" y1="55" x2="54" y2="66" stroke="#8A8580" stroke-width="1.3"/>
+            <path d="M53 54 Q56 58, 53 61" stroke="#E8E4DE" stroke-width="3" fill="none"/>
+            <path d="M54 54 Q57 57, 54 60" stroke="#D8D3CB" stroke-width="2" fill="none"/>
+            <path d="M54 66 L49 70 M54 66 L54 71 M54 66 L59 70" stroke="#8A8580" stroke-width="1"/>
+            <path d="M52 68 Q54 66, 56 68" stroke="#E8E4DE" stroke-width="1.5" fill="none"/>
+        </g>
+        <defs>
+            <linearGradient id="hoen-body-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#F0EDE8"/>
+                <stop offset="60%" stop-color="#E8E4DE"/>
+                <stop offset="100%" stop-color="#D8D3CB"/>
+            </linearGradient>
+        </defs>
+    </svg>
+</div>
+
+<!-- Cartoonish AWEBO! yell bubble (starburst) -->
+<div id="hoen-awebo" class="hoen-awebo">
+    <svg width="260" height="165" viewBox="0 0 260 165" xmlns="http://www.w3.org/2000/svg">
+        <!-- Starburst yell shape -->
+        <path d="M130,8 L142,38 L175,12 L163,45 L208,28 L188,58 L235,55
+                 L198,75 L228,102 L190,92 L202,125 L166,106 L148,138
+                 L130,108 L112,138 L94,106 L58,125 L70,92 L32,102
+                 L62,75 L25,55 L72,58 L52,28 L97,45 L85,12 L118,38 Z"
+              fill="white" stroke="#2D2D2D" stroke-width="3.5" stroke-linejoin="round"/>
+        <!-- Tail pointing down-left toward bird -->
+        <polygon points="75,122 48,160 100,130" fill="white"/>
+        <line x1="75" y1="122" x2="48" y2="160" stroke="#2D2D2D" stroke-width="3"/>
+        <line x1="48" y1="160" x2="100" y2="130" stroke="#2D2D2D" stroke-width="3"/>
+        <line x1="73" y1="120" x2="103" y2="128" stroke="white" stroke-width="7"/>
+        <!-- AWEBO! text — big, bold, italic -->
+        <text x="130" y="82" text-anchor="middle" font-family="'PT Serif',serif"
+              font-size="38" font-weight="900" font-style="italic" fill="#C44D3F"
+              stroke="#2D2D2D" stroke-width="0.5">AWEBO!</text>
+    </svg>
+</div>
+
+<!-- Front-facing angry sneeuwhoen (attack finale) -->
+<div id="hoen-face" class="hoen-face-container">
+    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Round body -->
+        <ellipse cx="60" cy="68" rx="38" ry="30" fill="url(#hoen-face-fill)" stroke="#B8B3AA" stroke-width="1.5"/>
+        <!-- Left wing (spread, menacing) -->
+        <path d="M22 68 Q8 50, 5 35 Q12 42, 20 48 Q10 55, 14 62" fill="#E8E4DE" stroke="#B8B3AA" stroke-width="1.2"/>
+        <path d="M22 68 Q14 58, 12 48" stroke="#C4BFB6" stroke-width="1" fill="none"/>
+        <!-- Right wing (spread, menacing) -->
+        <path d="M98 68 Q112 50, 115 35 Q108 42, 100 48 Q110 55, 106 62" fill="#E8E4DE" stroke="#B8B3AA" stroke-width="1.2"/>
+        <path d="M98 68 Q106 58, 108 48" stroke="#C4BFB6" stroke-width="1" fill="none"/>
+        <!-- Head -->
+        <circle cx="60" cy="38" r="22" fill="#E8E4DE" stroke="#B8B3AA" stroke-width="1.5"/>
+        <!-- Angry eyebrows (red wenkbrauw, both sides!) -->
+        <path d="M40 28 Q47 22, 54 27" stroke="#C44D3F" stroke-width="3" fill="none"/>
+        <path d="M66 27 Q73 22, 80 28" stroke="#C44D3F" stroke-width="3" fill="none"/>
+        <!-- Angry eyes (narrowed) -->
+        <ellipse cx="50" cy="35" rx="3.5" ry="2" fill="#2D2D2D"/>
+        <ellipse cx="70" cy="35" rx="3.5" ry="2" fill="#2D2D2D"/>
+        <circle cx="51" cy="34.5" r="0.8" fill="white"/>
+        <circle cx="71" cy="34.5" r="0.8" fill="white"/>
+        <!-- Open beak (aggressive V-shape) -->
+        <path d="M53 44 L60 40 L67 44" fill="#5A5550" stroke="#4A4540" stroke-width="1"/>
+        <path d="M53 44 L60 50 L67 44" fill="#6A6560" stroke="#4A4540" stroke-width="1"/>
+        <!-- Feathered feet (visible below body) -->
+        <path d="M45 95 L40 105 M45 95 L45 106 M45 95 L50 105" stroke="#8A8580" stroke-width="1.5"/>
+        <path d="M75 95 L70 105 M75 95 L75 106 M75 95 L80 105" stroke="#8A8580" stroke-width="1.5"/>
+        <path d="M43 100 Q45 97, 47 100" stroke="#E8E4DE" stroke-width="2" fill="none"/>
+        <path d="M73 100 Q75 97, 77 100" stroke="#E8E4DE" stroke-width="2" fill="none"/>
+        <defs>
+            <linearGradient id="hoen-face-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#F0EDE8"/>
+                <stop offset="60%" stop-color="#E8E4DE"/>
+                <stop offset="100%" stop-color="#D8D3CB"/>
+            </linearGradient>
+        </defs>
+    </svg>
+</div>
+
+<!-- Blackout flash overlay (attack finale) -->
+<div id="hoen-blackout" class="hoen-blackout"></div>
+
 </body>
 </html>
