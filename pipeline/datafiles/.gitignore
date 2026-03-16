@@ -1,0 +1,4 @@
+# Raw data files are too large for git (up to 5 GB).
+# See pipeline/DATA_SOURCES.md for download instructions.
+*
+!.gitignore

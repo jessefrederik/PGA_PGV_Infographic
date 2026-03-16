@@ -4,7 +4,18 @@ __pycache__/
 .DS_Store
 data/*.csv
 
+# Flourish/D3 templates (separate dev, not part of main pipeline)
+fl-box-plots/
+fl-scatter-plot/
+fl-time-series/
+fl-waveform/
+flourish-template/
+
 # Flourish build artifacts
 */template.js
 */template.js.map
 */node_modules/
+
+# Pipeline intermediate data
+pipeline/data/
+pipeline/output/
